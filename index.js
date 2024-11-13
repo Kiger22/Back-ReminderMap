@@ -8,11 +8,12 @@ connectDB();
 
 const port = process.env.PORT || 3000;
 const app = express();
+const router = express.Router();
 
 app.use(cors());
 app.use(express.json());
 
-//app.use("/", router);
+app.use("/", router);
 app.use('/api/v1', mainRoutes);
 
 app.use('*', (req, res, next) => {
