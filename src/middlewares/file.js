@@ -8,10 +8,14 @@ const multerStorage = (folderName) => {
     params: {
       folder: folderName,
       allowedFormats: ["jpg", "png", "jpeg", "gif", "webp"],
+      transformation: [{ width: 200, height: 200, crop: "fill" }],
+      format: "webp"
     },
   });
 };
 
-const upload = (folderName) => multer({ storage: multerStorage(folderName) });
+const upload = (folderName) => multer({
+  storage: multerStorage(folderName)
+});
 
 module.exports = { upload };

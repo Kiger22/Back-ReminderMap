@@ -4,28 +4,38 @@ const express = require("express");
 const { connectDB } = require("./src/config/db");
 const mainRoutes = require("./src/api/routes/main.routes");
 
-connectDB();
-
-const port = process.env.PORT || 3000;
 const app = express();
-const router = express.Router();
 
-app.use(cors());
+// Configuración de CORS
+app.use(cors({
+  origin: '*', // O tu URL específica del frontend
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
+
+// Middlewares
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
-app.use("/", router);
+// Conexión a la base de datos
+connectDB().catch(console.error);
+
+// Rutas
 app.use('/api/v1', mainRoutes);
 
-app.use('*', (req, res, next) => {
-  const error = new Error('Not Found');
-  error.status = 404;
-  next(error);
+// Ruta de prueba
+app.get('/api/health', (req, res) => {
+  res.json({ status: 'ok', message: 'API is running' });
 });
 
+// Manejo de errores
 app.use((err, req, res, next) => {
-  res.status(err.status || 500).json(err.message || 'unexpected error');
+  console.error('Error:', err);
+  res.status(err.status || 500).json({
+    message: err.message || 'unexpected error',
+    status: err.status || 500
+  });
 });
 
-app.listen(port, () =>
-  console.log(`Server running on port http://localhost:${port}`)
-);
+// Para Vercel, exportamos la app
+module.exports = app;
