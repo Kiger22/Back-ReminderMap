@@ -14,23 +14,18 @@ const allowedOrigins = [
 ];
 
 // Configuración de CORS
-app.use(cors({
-  origin: function (origin, callback) {
-    // Permitir requests sin origin (como mobile apps o curl)
-    if (!origin) return callback(null, true);
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', 'http://localhost:5174');
+  res.header('Access-Control-Allow-Methods', '*');
+  res.header('Access-Control-Allow-Headers', '*');
+  res.header('Access-Control-Allow-Credentials', 'true');
 
-    if (allowedOrigins.indexOf(origin) === -1) {
-      return callback(new Error('CORS no permitido'));
-    }
-    return callback(null, true);
-  },
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
-}));
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
 
-// Middleware para preflight requests
-app.options('*', cors());
+  next();
+});
 
 // Middlewares básicos
 app.use(express.json());
