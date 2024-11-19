@@ -13,19 +13,20 @@ const allowedOrigins = [
   // Añade aquí tu URL de producción cuando la tengas
 ];
 
-// Configuración de CORS
-app.use((req, res, next) => {
-  res.header('Access-Control-Allow-Origin', 'http://localhost:5174');
-  res.header('Access-Control-Allow-Methods', '*');
-  res.header('Access-Control-Allow-Headers', '*');
-  res.header('Access-Control-Allow-Credentials', 'true');
-
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end();
-  }
-
-  next();
-});
+// Configuración de CORS usando el middleware cors
+app.use(cors({
+  origin: function (origin, callback) {
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.indexOf(origin) === -1) {
+      const msg = 'The CORS policy for this site does not allow access from the specified Origin.';
+      return callback(new Error(msg), false);
+    }
+    return callback(null, true);
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Origin', 'X-Requested-With', 'Content-Type', 'Accept', 'Authorization']
+}));
 
 // Middlewares básicos
 app.use(express.json());
@@ -47,5 +48,22 @@ app.use((err, req, res, next) => {
     status: err.status || 500
   });
 });
+
+// Conexión a la base de datos y inicio del servidor
+const PORT = process.env.PORT || 8080;
+
+const startServer = async () => {
+  try {
+    await connectDB();
+    app.listen(PORT, () => {
+      console.log(`Puerto del Servidor: http://localhost:${PORT}`);
+      console.log('Conectado a MongoDB');
+    });
+  } catch (error) {
+    console.error('Error al conectar a MongoDB:', error);
+  }
+};
+
+startServer();
 
 module.exports = app;

@@ -13,7 +13,7 @@ const userSchema = new mongoose.Schema(
     },
     name: { type: String, required: false },
     email: { type: String, required: false },
-    avatar: { type: Image, required: false },
+    avatar: { type: String, required: false },
     myHouseLocation: { type: String, required: false },
     myWorkLocation: { type: String, required: false },
     myFavoritesLocations: [{
