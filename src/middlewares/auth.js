@@ -1,6 +1,9 @@
 const User = require("../api/models/User.model");
 const { verifyJwt } = require("../config/jwt");
 
+//? Middleware para verificar si el usuario está autenticado y si es administrador
+
+// Middleware para verificar si el usuario está autenticado
 const isAuth = async (req, res, next) => {
   try {
     const token = req.headers.authorization?.split(" ")[1];
@@ -26,6 +29,7 @@ const isAuth = async (req, res, next) => {
   }
 };
 
+// Middleware para verificar si el usuario es administrador
 const isAdmin = async (req, res, next) => {
   try {
     const token = req.headers.authorization?.split(" ")[1];

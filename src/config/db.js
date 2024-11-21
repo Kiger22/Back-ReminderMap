@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 require("dotenv").config();
 
+// Conexión a MongoDB
 const connectDB = async () => {
   try {
     await mongoose.connect(process.env.MONGODB_URI);
@@ -11,6 +12,10 @@ const connectDB = async () => {
   }
 };
 
+// Eventos de conexión y desconexión
+mongoose.connection.on('connected', () => {
+  console.log('MongoDB conectada en', mongoose.connection.host);
+});
 mongoose.connection.on('error', err => {
   console.error('MongoDB connection error:', err);
 });

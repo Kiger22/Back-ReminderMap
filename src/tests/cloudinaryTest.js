@@ -4,9 +4,10 @@ const { cloudinary } = require('../config/cldry');
 const testConnection = async () => {
   try {
     const result = await cloudinary.api.ping();
-    console.log("✅ Conexión a Cloudinary exitosa:", result);
-  } catch (error) {
-    console.error("❌ Error de conexión:", error);
+    console.log("Conexión a Cloudinary exitosa:", result);
+  }
+  catch (error) {
+    console.error("Error de conexión:", error);
   }
 };
 
@@ -20,10 +21,11 @@ const testUpload = async () => {
         resource_type: "auto"
       }
     );
-    console.log("✅ Subida exitosa:", result);
-    return result.public_id; // Retornamos el public_id para usarlo en el test de borrado
-  } catch (error) {
-    console.error("❌ Error al subir:", error);
+    console.log("Subida exitosa:", result);
+    return result.public_id;
+  }
+  catch (error) {
+    console.error("Error al subir:", error);
     return null;
   }
 };
@@ -32,15 +34,16 @@ const testUpload = async () => {
 const testDestroy = async (publicId) => {
   try {
     const result = await cloudinary.uploader.destroy(publicId);
-    console.log("✅ Imagen borrada exitosamente:", result);
-  } catch (error) {
-    console.error("❌ Error al borrar la imagen:", error);
+    console.log("Imagen borrada exitosamente:", result);
+  }
+  catch (error) {
+    console.error("Error al borrar la imagen:", error);
   }
 };
 
 // Ejecutar todas las pruebas secuencialmente
 const runAllTests = async () => {
-  console.log('🚀 Iniciando pruebas de Cloudinary...\n');
+  console.log('Iniciando pruebas de Cloudinary...\n');
 
   // Test de conexión
   console.log('1. Probando conexión...');
@@ -56,7 +59,7 @@ const runAllTests = async () => {
     await testDestroy(publicId);
   }
 
-  console.log('\n✨ Pruebas completadas');
+  console.log('\nPruebas completadas');
 };
 
 runAllTests();

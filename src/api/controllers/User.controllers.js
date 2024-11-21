@@ -82,7 +82,6 @@ const registerUser = async (req, res, next) => {
   }
 };
 
-
 //Login
 const loginUser = async (req, res, next) => {
 

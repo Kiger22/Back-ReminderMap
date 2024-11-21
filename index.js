@@ -10,7 +10,6 @@ const app = express();
 const allowedOrigins = [
   'http://localhost:5173',
   'http://localhost:5174',
-  // Añade aquí tu URL de producción cuando la tengas
 ];
 
 // Configuración de CORS usando el middleware cors
@@ -18,7 +17,7 @@ app.use(cors({
   origin: function (origin, callback) {
     if (!origin) return callback(null, true);
     if (allowedOrigins.indexOf(origin) === -1) {
-      const msg = 'The CORS policy for this site does not allow access from the specified Origin.';
+      const msg = "La política CORS para este sitio no permite el acceso desde el Origen especificado.";
       return callback(new Error(msg), false);
     }
     return callback(null, true);
@@ -30,14 +29,19 @@ app.use(cors({
 
 // Middlewares básicos
 app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.urlencoded({
+  extended: true
+}));
 
 // Rutas
 app.use('/api/v1', mainRoutes);
 
 // Ruta de prueba
 app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', message: 'API is running' });
+  res.json({
+    status: 'ok',
+    message: 'API is running'
+  });
 });
 
 // Manejo de errores
@@ -63,7 +67,6 @@ const startServer = async () => {
     console.error('Error al conectar a MongoDB:', error);
   }
 };
-
 startServer();
 
 module.exports = app;
