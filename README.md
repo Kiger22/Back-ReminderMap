@@ -13,7 +13,7 @@ Este es el backend de la aplicación **ReminderMap**, una aplicación de recorda
 - [Estructura de Carpetas](#estructura-de-carpetas)
 - [Uso](#uso)
 - [API Endpoints](#api-endpoints)
-- [Contribuir](#contribuir)
+- [Contribuciones](#contribuciones)
 - [Licencia](#licencia)
 
 ---
