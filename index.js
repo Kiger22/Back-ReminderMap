@@ -6,26 +6,20 @@ const mainRoutes = require("./src/api/routes/main.routes");
 
 const app = express();
 
-// Lista de orígenes permitidos
-const allowedOrigins = [
-  'http://localhost:5173',
-  'http://localhost:5174',
-];
-
 // Configuración de CORS usando el middleware cors
+const allowedOrigins = [/^http:\/\/localhost:\d+$/];
+
 app.use(cors({
   origin: function (origin, callback) {
-    if (!origin) return callback(null, true);
-    if (allowedOrigins.indexOf(origin) === -1) {
-      const msg = "La política CORS para este sitio no permite el acceso desde el Origen especificado.";
-      return callback(new Error(msg), false);
+    if (!origin || allowedOrigins.some((regex) => regex.test(origin))) {
+      return callback(null, true);
     }
-    return callback(null, true);
+    const msg = 'La política CORS no permite el acceso desde este origen.';
+    return callback(new Error(msg), false);
   },
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Origin', 'X-Requested-With', 'Content-Type', 'Accept', 'Authorization']
 }));
+
 
 // Manejo de errores de subida de archivos
 app.use((err, req, res, next) => {
