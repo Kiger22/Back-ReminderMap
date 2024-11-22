@@ -27,6 +27,24 @@ app.use(cors({
   allowedHeaders: ['Origin', 'X-Requested-With', 'Content-Type', 'Accept', 'Authorization']
 }));
 
+// Manejo de errores de subida de archivos
+app.use((err, req, res, next) => {
+  if (err.code === 'LIMIT_FILE_SIZE') {
+    return res.status(413).json({ message: "El archivo es demasiado grande. Máximo permitido: 5 MB." });
+  }
+  next(err);
+});
+
+// Configuración de Cloudinary
+app.post('/users/register', upload('avatars').single('avatar'), (req, res, next) => {
+  if (req.file) {
+    console.log('Archivo subido a Cloudinary:', req.file);
+  } else {
+    console.log('No se subió ningún archivo');
+  }
+  next();
+});
+
 // Middlewares básicos
 app.use(express.json());
 app.use(express.urlencoded({

@@ -9,13 +9,13 @@ const multerStorage = (folderName) => {
       folder: folderName,
       allowedFormats: ["jpg", "png", "jpeg", "gif", "webp"],
       transformation: [{ width: 200, height: 200, crop: "fill" }],
-      format: "webp"
     },
   });
 };
 
 const upload = (folderName) => multer({
-  storage: multerStorage(folderName)
+  storage: multerStorage(folderName),
+  limits: { fileSize: 5 * 1024 * 1024 },
 });
 
 module.exports = { upload };
