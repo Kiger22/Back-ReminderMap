@@ -5,21 +5,36 @@ const { connectDB } = require("./src/config/db");
 const mainRoutes = require("./src/api/routes/main.routes");
 
 const app = express();
+app.options('*', cors());
 
-// Configuración de CORS usando el middleware cors
-const allowedOrigins = [/^http:\/\/localhost:\d+$/];
+/* // Configuración de CORS usando el middleware cors
+const allowedOrigins = ['http://localhost:5173', 'http://localhost:5174'];
 
 app.use(cors({
   origin: function (origin, callback) {
-    if (!origin || allowedOrigins.some((regex) => regex.test(origin))) {
+    // Si el origen no está definido (por ejemplo, en herramientas locales como Insomnia/Postman)
+    if (!origin) return callback(null, true);
+
+    // Verifica si el origen está en la lista permitida
+    if (allowedOrigins.includes(origin)) {
       return callback(null, true);
     }
+
+    // Bloquea la solicitud si el origen no es válido
     const msg = 'La política CORS no permite el acceso desde este origen.';
     return callback(new Error(msg), false);
   },
   credentials: true,
-}));
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Origin', 'X-Requested-With', 'Content-Type', 'Accept', 'Authorization']
+})); */
 
+app.use(cors({
+  origin: '*',
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Origin', 'X-Requested-With', 'Content-Type', 'Accept', 'Authorization']
+}));
 
 // Manejo de errores de subida de archivos
 app.use((err, req, res, next) => {
@@ -64,6 +79,14 @@ app.use((err, req, res, next) => {
     status: err.status || 500
   });
 });
+
+// Manejo de logs de origen y método de la petición
+app.use((req, res, next) => {
+  console.log('Origen:', req.headers.origin);
+  console.log('Método:', req.method);
+  next();
+});
+
 
 // Conexión a la base de datos y inicio del servidor
 const PORT = process.env.PORT || 8080;
