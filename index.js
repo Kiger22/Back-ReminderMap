@@ -23,12 +23,12 @@ app.use(cors({
   allowedHeaders: ['Origin', 'X-Requested-With', 'Content-Type', 'Accept', 'Authorization']
 }));
 
-/* app.use(cors({
+app.use(cors({
   origin: '*',
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Origin', 'X-Requested-With', 'Content-Type', 'Accept', 'Authorization']
-})); */
+}));
 
 // Manejo de errores de subida de archivos
 app.use((err, req, res, next) => {
