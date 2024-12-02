@@ -44,16 +44,6 @@ app.use((err, req, res, next) => {
   next(err);
 });
 
-// Configuración de Cloudinary
-app.post('/users/register', upload('avatars').single('avatar'), (req, res, next) => {
-  if (req.file) {
-    console.log('Archivo subido a Cloudinary:', req.file);
-  } else {
-    console.log('No se subió ningún archivo');
-  }
-  next();
-});
-
 // Middlewares básicos
 app.use(express.json());
 app.use(express.urlencoded({
