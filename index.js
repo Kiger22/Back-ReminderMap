@@ -7,10 +7,10 @@ const mainRoutes = require("./src/api/routes/main.routes");
 const app = express();
 app.options('*', cors());
 
-/* // Configuración de CORS usando el middleware cors
+// Configuración de CORS usando el middleware cors
 const allowedOrigins = ['http://localhost:5173', 'http://localhost:5174'];
 
-app.use(cors({
+/* app.use(cors({
   origin: function (origin, callback) {
     // Si el origen no está definido (por ejemplo, en herramientas locales como Insomnia/Postman)
     if (!origin) return callback(null, true);
