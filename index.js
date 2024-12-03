@@ -11,7 +11,6 @@ const allowedOrigins = process.env.NODE_ENV === 'production'
   ? ['https://back-reminder-map.vercel.app/api/v1']
   : ['http://localhost:5173', 'http://localhost:5174'];
 
-
 app.use(cors({
   origin: function (origin, callback) {
     if (!origin) return callback(null, true);
@@ -25,8 +24,6 @@ app.use(cors({
   allowedHeaders: ['Origin', 'X-Requested-With', 'Content-Type', 'Accept', 'Authorization']
 }));
 
-
-
 // Middlewares básicos
 app.use(express.json());
 app.use(express.urlencoded({
@@ -38,7 +35,6 @@ app.use((req, res, next) => {
   console.log('Origen:', req.headers.origin);
   next();
 });
-
 
 // Rutas
 app.use('/api/v1', mainRoutes);
@@ -68,7 +64,6 @@ app.use((err, req, res, next) => {
     status: err.status || 500
   });
 });
-
 
 // Conexión a la base de datos y inicio del servidor
 const PORT = process.env.PORT || 3000;
