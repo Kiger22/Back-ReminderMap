@@ -10,33 +10,17 @@ app.options('*', cors());
 const allowedOrigins = ['http://localhost:5173', 'http://localhost:5174'];
 
 app.use(cors({
-  origin: function (origin, callback) {
-    if (!origin) return callback(null, true); // Permite solicitudes sin origen (por ejemplo, en Postman)
-    if (allowedOrigins.includes(origin)) {
+  origin: (origin, callback) => {
+    if (!origin || allowedOrigins.includes(origin)) {
       return callback(null, true);
     }
-    const msg = 'La política CORS no permite el acceso desde este origen.';
-    return callback(new Error(msg), false);
+    return callback(new Error('La política CORS no permite el acceso desde este origen.'), false);
   },
-  credentials: true, // Si estás usando cookies o autenticación
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Origin', 'X-Requested-With', 'Content-Type', 'Accept', 'Authorization']
-}));
-
-app.use(cors({
-  origin: '*',
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Origin', 'X-Requested-With', 'Content-Type', 'Accept', 'Authorization']
 }));
 
-// Manejo de errores de subida de archivos
-app.use((err, req, res, next) => {
-  if (err.code === 'LIMIT_FILE_SIZE') {
-    return res.status(413).json({ message: "El archivo es demasiado grande. Máximo permitido: 5 MB." });
-  }
-  next(err);
-});
 
 // Middlewares básicos
 app.use(express.json());
@@ -44,48 +28,49 @@ app.use(express.urlencoded({
   extended: true
 }));
 
+app.use((req, res, next) => {
+  console.log(`[${new Date().toISOString()}] ${req.method} ${req.originalUrl}`);
+  console.log('Origen:', req.headers.origin);
+  next();
+});
+
+
 // Rutas
 app.use('/api/v1', mainRoutes);
 
 // Ruta de prueba
-app.get('/api/health', (req, res) => {
+app.get('/api/', (req, res) => {
   res.json({
     status: 'ok',
     message: 'API is running'
   });
 });
 
+app.use("*", (req, res, next) => {
+  const error = new Error("Not Found");
+  error.status = 404;
+  next(error);
+});
+
 // Manejo de errores
 app.use((err, req, res, next) => {
+  if (err.code === 'LIMIT_FILE_SIZE') {
+    return res.status(413).json({ message: "El archivo es demasiado grande. Máximo permitido: 5 MB." });
+  }
   console.error('Error:', err);
   res.status(err.status || 500).json({
-    message: err.message || 'unexpected error',
+    message: err.message || 'Error inesperado',
     status: err.status || 500
   });
 });
 
-// Manejo de logs de origen y método de la petición
-app.use((req, res, next) => {
-  console.log('Origen:', req.headers.origin);
-  console.log('Método:', req.method);
-  next();
-});
-
 
 // Conexión a la base de datos y inicio del servidor
-const PORT = process.env.PORT || 8080;
+const PORT = process.env.PORT || 3000;
+connectDB();
 
-const startServer = async () => {
-  try {
-    await connectDB();
-    app.listen(PORT, () => {
-      console.log(`Puerto del Servidor: http://localhost:${PORT}`);
-      console.log('Conectado a MongoDB');
-    });
-  } catch (error) {
-    console.error('Error al conectar a MongoDB:', error);
-  }
-};
-startServer();
+app.listen(3000, () => {
+  console.log(`Server running in http://localhost:${PORT}`);
+});
 
 module.exports = app;
