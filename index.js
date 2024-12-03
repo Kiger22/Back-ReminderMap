@@ -14,14 +14,13 @@ const allowedOrigins = process.env.NODE_ENV === 'production'
 
 app.use(cors({
   origin: function (origin, callback) {
-    if (!origin) return callback(null, true); // Permitir solicitudes sin origen (Postman, herramientas de prueba)
+    if (!origin) return callback(null, true);
     if (allowedOrigins.includes(origin)) {
       return callback(null, true);
     }
     const msg = 'La política CORS no permite el acceso desde este origen.';
     return callback(new Error(msg), false);
   },
-  credentials: true, // Habilitar cookies si las usas
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Origin', 'X-Requested-With', 'Content-Type', 'Accept', 'Authorization']
 }));
