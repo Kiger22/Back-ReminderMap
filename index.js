@@ -7,19 +7,25 @@ const mainRoutes = require("./src/api/routes/main.routes");
 const app = express();
 app.options('*', cors());
 
-const allowedOrigins = ['http://localhost:5173', 'http://localhost:5174'];
+const allowedOrigins = process.env.NODE_ENV === 'production'
+  ? ['https://back-reminder-map.vercel.app/api/v1']
+  : ['http://localhost:5173', 'http://localhost:5174'];
+
 
 app.use(cors({
-  origin: (origin, callback) => {
-    if (!origin || allowedOrigins.includes(origin)) {
+  origin: function (origin, callback) {
+    if (!origin) return callback(null, true); // Permitir solicitudes sin origen (Postman, herramientas de prueba)
+    if (allowedOrigins.includes(origin)) {
       return callback(null, true);
     }
-    return callback(new Error('La política CORS no permite el acceso desde este origen.'), false);
+    const msg = 'La política CORS no permite el acceso desde este origen.';
+    return callback(new Error(msg), false);
   },
-  credentials: true,
+  credentials: true, // Habilitar cookies si las usas
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Origin', 'X-Requested-With', 'Content-Type', 'Accept', 'Authorization']
 }));
+
 
 
 // Middlewares básicos
