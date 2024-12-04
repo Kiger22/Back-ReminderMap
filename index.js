@@ -3,23 +3,14 @@ const cors = require('cors');
 const express = require("express");
 const { connectDB } = require("./src/config/db");
 const mainRoutes = require("./src/api/routes/main.routes");
-
 const app = express();
-app.options('*', cors());
 
-const allowedOrigins = process.env.NODE_ENV === 'production'
-  ? ['https://back-reminder-map.vercel.app/api/v1']
-  : ['http://localhost:5173', 'http://localhost:5174'];
+// Conexión a la base de datos y inicio del servidor
+const PORT = process.env.PORT || 3000;
+connectDB();
 
+// Configuración CORS
 app.use(cors({
-  origin: function (origin, callback) {
-    if (!origin) return callback(null, true);
-    if (allowedOrigins.includes(origin)) {
-      return callback(null, true);
-    }
-    const msg = 'La política CORS no permite el acceso desde este origen.';
-    return callback(new Error(msg), false);
-  },
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Origin', 'X-Requested-With', 'Content-Type', 'Accept', 'Authorization']
 }));
@@ -65,9 +56,6 @@ app.use((err, req, res, next) => {
   });
 });
 
-// Conexión a la base de datos y inicio del servidor
-const PORT = process.env.PORT || 3000;
-connectDB();
 
 app.listen(3000, () => {
   console.log(`Server running in http://localhost:${PORT}`);
