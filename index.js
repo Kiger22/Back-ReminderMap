@@ -11,12 +11,13 @@ connectDB();
 
 // Configuración CORS
 app.use(cors({
-  origin: '*',
+  origin: 'http://localhost:5173',
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Origin', 'X-Requested-With', 'Content-Type', 'Accept', 'Authorization'],
-
-
 }));
+
+// Resto de la configuración del servidor
+app.options('*', cors());
 
 // Middlewares básicos
 app.use(express.json());
