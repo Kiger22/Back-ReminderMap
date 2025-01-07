@@ -16,7 +16,7 @@ app.use(cors({
   allowedHeaders: ['Origin', 'X-Requested-With', 'Content-Type', 'Accept', 'Authorization'],
 }));
 
-// Resto de la configuración del servidor
+// Configuración para permitir CORS desde cualquier origen
 app.options('*', cors());
 
 // Middlewares básicos
@@ -25,6 +25,7 @@ app.use(express.urlencoded({
   extended: true
 }));
 
+// Middleware para mostrar en consola las solicitudes que llegan al servidor
 app.use((req, res, next) => {
   console.log(`[${new Date().toISOString()}] ${req.method} ${req.originalUrl}`);
   console.log('Origen:', req.headers.origin);
@@ -42,6 +43,7 @@ app.get('/api/', (req, res) => {
   });
 });
 
+// Ruta no encontrada
 app.use("*", (req, res, next) => {
   const error = new Error("Not Found");
   error.status = 404;
@@ -60,7 +62,7 @@ app.use((err, req, res, next) => {
   });
 });
 
-
+// Inicio del servidor
 app.listen(3000, () => {
   console.log(`Server running in http://localhost:${PORT}`);
 });

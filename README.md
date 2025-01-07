@@ -160,6 +160,6 @@ Las contribuciones son bienvenidas. Si deseas contribuir, por favor sigue los si
 
 Este proyecto está bajo la Licencia (Tu Licencia) - mira el archivo [LICENSE.md](LICENSE.md) para detalles
 
----------
+---
 
 **⌨️ por [kiger22](https://github.com/Kiger22)**
