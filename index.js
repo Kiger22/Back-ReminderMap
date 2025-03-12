@@ -6,18 +6,32 @@ const mainRoutes = require("./src/api/routes/main.routes");
 const app = express();
 
 // Conexión a la base de datos y inicio del servidor
-const PORT = process.env.PORT || 3000;
-connectDB();
+const PORT = process.env.PORT || 3001;
+const startServer = async () => {
+  try {
+    await connectDB();
+    app.listen(PORT, () => {
+      console.log(`Servidor corriendo en http://localhost:${PORT}`);
+    });
+  } catch (error) {
+    console.error('Error al iniciar el servidor:', error);
+    process.exit(1);
+  }
+};
 
-// Configuración CORS
-app.use(cors({
-  origin: 'http://localhost:5174, http://localhost:5173',
+// Opciones CORS
+const corsOptions = {
+  origin: process.env.NODE_ENV === 'production'
+    ? process.env.ALLOWED_ORIGINS?.split(',') || 'http://localhost:5173'
+    : '*',
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Origin', 'X-Requested-With', 'Content-Type', 'Accept', 'Authorization'],
-}));
+  credentials: true, // Permite enviar cookies a través de solicitudes CORS
+  maxAge: 86400 // Cachea los resultados del preflight por 1 día
+};
 
-// Configuración para permitir CORS desde cualquier origen
-app.options('*', cors());
+// Configuración de CORS
+app.use(cors(corsOptions));
 
 // Middlewares básicos
 app.use(express.json());
@@ -35,22 +49,23 @@ app.use((req, res, next) => {
 // Rutas
 app.use('/api/v1', mainRoutes);
 
-// Ruta de prueba
-app.get('/api/', (req, res) => {
+// Ruta de verificación de salud del servidor
+app.get('/api/health', (req, res) => {
   res.json({
     status: 'ok',
-    message: 'API is running'
+    uptime: process.uptime(),
+    timestamp: new Date().toISOString()
   });
 });
 
-// Ruta no encontrada
+// Middleware para rutas no encontradas
 app.use("*", (req, res, next) => {
-  const error = new Error("Not Found");
+  const error = new Error("Ruta no encontrada");
   error.status = 404;
   next(error);
 });
 
-// Manejo de errores
+// Middleware centralizado para manejo de errores
 app.use((err, req, res, next) => {
   if (err.code === 'LIMIT_FILE_SIZE') {
     return res.status(413).json({ message: "El archivo es demasiado grande. Máximo permitido: 5 MB." });
@@ -62,9 +77,4 @@ app.use((err, req, res, next) => {
   });
 });
 
-// Inicio del servidor
-app.listen(3000, () => {
-  console.log(`Server running in http://localhost:${PORT}`);
-});
-
-module.exports = app;
+startServer();

@@ -2,16 +2,14 @@ const express = require('express');
 const reminderRoutes = express.Router();
 const {
   createReminder,
-  getRemindersByUser,
-  getReminderById,
+  getUserReminders,
   updateReminder,
   deleteReminder
-} = require('../controllers/Remainder.controllers');
+} = require('../controllers/Reminder.controllers');
 
 // Rutas para los recordatorios
 reminderRoutes.post('/', createReminder);
-reminderRoutes.get('/:userId', getRemindersByUser);
-reminderRoutes.get('/:id', getReminderById);
+reminderRoutes.get('/:userId', getUserReminders);
 reminderRoutes.put('/:id', updateReminder);
 reminderRoutes.delete('/:id', deleteReminder);
 

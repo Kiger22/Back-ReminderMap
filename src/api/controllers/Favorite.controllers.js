@@ -27,9 +27,9 @@ const getFavoritesByUser = async (req, res) => {
 // Eliminar un favorito
 const deleteFavorite = async (req, res) => {
   try {
-    const { userId } = req.params.userId;
-    const { placeId } = req.params.placeId
-    const deletedFavorite = await Favorite.findOneAndDelete({ userId: userId, placeId: req.params.placeId });
+    const userId = req.params.userId;
+    const placeId = req.params.placeId;
+    const deletedFavorite = await Favorite.findOneAndDelete({ userId: userId, placeId: placeId });
     if (!deletedFavorite) return res.status(404).json({ message: 'Favorito no encontrado' });
     res.status(200).json({ message: 'Favorito eliminado' });
   }

@@ -2,7 +2,7 @@ const bcrypt = require("bcrypt");
 const User = require("../models/User.model");
 const { generateSign } = require("../../config/jwt");
 
-//Obtener usuarios
+//!Obtener usuarios
 const getUser = async (req, res, next) => {
   try {
     const user = await User.find();
@@ -16,192 +16,208 @@ const getUser = async (req, res, next) => {
   }
 };
 
-//Register
+//!Registrar nuevo usuario
 const registerUser = async (req, res, next) => {
   try {
-    const { email, password, name, username } = req.body;
+    const { name, username, email, password } = req.body;
 
-    // Validaciones
-    if (!email || !password || !name || !username) {
+    // Verificamos si se subió un avatar
+    const avatarUrl = req.file ? req.file.path : 'default-avatar-url';
+
+    // Verificamos si el usuario ya existe por nombre de usuario
+    const existingUser = await User.findOne({ username });
+    if (existingUser) {
       return res.status(400).json({
-        message: "Todos los campos son obligatorios"
+        mensaje: "Este nombre de usuario ya está registrado",
+        éxito: false
       });
     }
 
-    // Validar si el email ya está en uso
-    const existingUser = await User.findOne({ email });
-    if (existingUser) {
-      return res.status(400).json({ message: "Este usuario ya existe" });
-    }
+    // Creamos nuevo usuario con contraseña encriptada
+    const saltRounds = 10;
+    const hashedPassword = await bcrypt.hash(password.trim(), saltRounds);
+    console.log("Contraseña hasheada antes de guardar:", hashedPassword);
 
-    // Validar si el username ya está en uso
-    const existingUsername = await User.findOne({ username });
-    if (existingUsername) {
-      return res.status(400).json({ message: "Este username ya existe" });
-    }
-
-    // Subir el avatar (si hay) y obtener la ruta del avatar
-    const avatar = req.file ? req.file.path : null;
-
-    // Asegúrate de eliminar espacios en blanco de la contraseña
-    const trimmedPassword = password.trim();
-
-    // Hashear la contraseña
-    const hashedPassword = await bcrypt.hash(trimmedPassword, 10);
-    console.log('Hash generado:', hashedPassword);
-
-    // Crear el nuevo usuario
     const newUser = new User({
       name,
       username,
       email,
       password: hashedPassword,
-      avatar,
-      role: "user",
+      avatar: avatarUrl, // Aseguramos que se guarde la URL del avatar
+      role: "user", // Asignamos rol predeterminado
+      createdAt: new Date()
     });
 
-    // Guardar el usuario en la base de datos
-    const userSaved = await newUser.save();
-    console.log('Usuario guardado:', userSaved);
+    // Guardamos el usuario en la base de datos
+    const savedUser = await newUser.save();
 
-    // Convertir a objeto plano y eliminar la contraseña del objeto de respuesta
-    const userResponse = userSaved.toObject();
-    delete userResponse.password;
-
-    // Devolver el usuario registrado
+    // Aseguramos que la respuesta incluya la URL del avatar
     return res.status(201).json({
-      message: "Usuario registrado con éxito",
-      user: userResponse
+      éxito: true,
+      mensaje: "Usuario registrado correctamente",
+      user: {
+        _id: savedUser._id,
+        name: savedUser.name,
+        username: savedUser.username,
+        email: savedUser.email,
+        avatar: savedUser.avatar
+      }
     });
   } catch (error) {
-    console.error("Error al registrar usuario:", error);
-    return res.status(500).json({
-      message: "Error al registrar usuario",
-      error: error.message
-    });
+    next(error);
   }
 };
 
-//Login
+//!Login
 const loginUser = async (req, res, next) => {
-
   try {
-    // Validar si se enviaron los username y password
-    if (!req.body.username || !req.body.password) {
-      return res.status(400).json({
-        message: "Debes enviar el username y la contraseña"
-      });
-    }
+    // Buscamos usuario por nombre de usuario
     const user = await User.findOne({ username: req.body.username });
-
-    // Validar si el usuario existe
     if (!user) {
       return res.status(401).json({
-        message: "Este usuario no existe"
+        mensaje: "Usuario no encontrado",
+        éxito: false
       });
     }
 
-    // Validar si la contraseña es correcta
-    console.log('Contraseña ingresada:', req.body.password);
-    console.log('Hash almacenado:', user.password);
+    // Verificamos contraseña
     const passwordMatch = bcrypt.compare(req.body.password.trim(), user.password);
     if (!passwordMatch) {
       return res.status(401).json({
-        message: "Contraseña incorrecta"
+        mensaje: "Contraseña incorrecta",
+        éxito: false
       });
     }
 
+    // Generamos token de autenticación
     const token = generateSign(user._id);
+
+    // Evitamos devolver la contraseña en la respuesta
+    const userWithoutPassword = user.toObject();
+    delete userWithoutPassword.password;
+
     return res.status(200).json({
-      message: "Acceso permitido",
-      user,
-      token
-    })
-  }
-  catch (error) {
+      mensaje: "Login correcto",
+      token: token,
+      user: userWithoutPassword,
+      éxito: true
+    });
+  } catch (error) {
     return res.status(500).json({
-      message: "Ocurrió un error inesperado. Inténtalo nuevamente más tarde.",
-      error: error.message
+      mensaje: "Error al iniciar sesión",
+      error: error.message,
+      éxito: false
     });
   }
 };
 
-// Cambiar Roles
-const updateUserRoles = async (req, res) => {
-
+//!Obtener perfil de usuario
+const getUserProfile = async (req, res, next) => {
   try {
-    // Validar si el usuario actual es admin
-    if (req.user.role !== "admin") {
-      return res.status(403).json({
-        message: "No tienes permisos para cambiar el rol de otros usuarios"
-      });
-    }
-    // Validar si se envió el id del usuario
-    if (!req.params.id) {
-      return res.status(400).json({
-        message: "Debes enviar el id del usuario"
-      });
-    }
-    // Validar si se envió el nuevo rol
-    if (!req.body.role) {
-      return res.status(400).json({
-        message: "Debes enviar el nuevo rol"
-      });
-    }
+    const userId = req.params.id;
 
-    const { id } = req.params;
-    const userToUpdate = await User.findById(id);
-
-
-    if (!userToUpdate) {
+    // Buscamos usuario por ID
+    const user = await User.findById(userId).select("-password");
+    if (!user) {
       return res.status(404).json({
-        message: "Usuario no encontrado"
+        mensaje: "Usuario no encontrado",
+        éxito: false
       });
     }
 
-    userToUpdate.role = req.body.role;
-    await userToUpdate.save();
     return res.status(200).json({
-      message: "Rol actualizado correctamente",
-      user: userToUpdate
+      usuario: user,
+      éxito: true
     });
-  }
-  catch (error) {
+  } catch (error) {
     return res.status(500).json({
-      message: "Error al actualizar el rol",
-      error: error.message
+      mensaje: "Error al obtener perfil de usuario",
+      error: error.message,
+      éxito: false
     });
   }
 };
 
-// Eliminar un usuario
-const deleteUser = async (req, res) => {
+//!Actualizar usuario
+const updateUser = async (req, res, next) => {
   try {
-    const { id } = req.params;
+    const userId = req.params.id;
 
-    if (req.user.role === "admin" || req.user._id.toString() === id) {
-      const userToDelete = await User.findByIdAndDelete(id);
-
-      if (!userToDelete) {
-        return res.status(404).json({
-          message: "Usuario no encontrado"
-        });
-      };
-
-      return res.status(200).json({
-        message: "Usuario eliminado correctamente",
-        user: userToDelete
-      });
-    } else {
+    // Verificamos si el usuario tiene permisos
+    if (req.user._id.toString() !== userId && req.user.role !== 'admin') {
       return res.status(403).json({
-        message: "No tienes permisos para eliminar este usuario"
+        mensaje: "No tienes permiso para actualizar este usuario",
+        éxito: false
       });
     }
+
+    // Encriptar, si se intenta actualizar la contraseña
+    if (req.body.password) {
+      const saltRounds = 10;
+      req.body.password = await bcrypt.hash(req.body.password.trim(), saltRounds);
+    }
+
+    // Actualizamos datos del usuario
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      { ...req.body },
+      { new: true }
+    ).select("-password");
+
+    if (!updatedUser) {
+      return res.status(404).json({
+        mensaje: "Usuario no encontrado",
+        éxito: false
+      });
+    }
+
+    return res.status(200).json({
+      mensaje: "Usuario actualizado correctamente",
+      usuario: updatedUser,
+      éxito: true
+    });
   }
   catch (error) {
     return res.status(500).json({
-      message: "Error al eliminar el usuario",
-      error: error.message
+      mensaje: "Error al actualizar usuario",
+      error: error.message,
+      éxito: false
+    });
+  }
+};
+
+//!Eliminar usuario
+const deleteUser = async (req, res, next) => {
+  try {
+    const userId = req.params.id;
+
+    // Verificamos si el usuario tiene permisos
+    if (req.user._id.toString() !== userId && req.user.role !== 'admin') {
+      return res.status(403).json({
+        mensaje: "No tienes permiso para eliminar este usuario",
+        éxito: false
+      });
+    }
+
+    // Eliminamos usuario
+    const deletedUser = await User.findByIdAndDelete(userId);
+
+    if (!deletedUser) {
+      return res.status(404).json({
+        mensaje: "Usuario no encontrado",
+        éxito: false
+      });
+    }
+
+    return res.status(200).json({
+      mensaje: "Usuario eliminado correctamente",
+      éxito: true
+    });
+  } catch (error) {
+    return res.status(500).json({
+      mensaje: "Error al eliminar usuario",
+      error: error.message,
+      éxito: false
     });
   }
 };
@@ -210,6 +226,7 @@ module.exports = {
   getUser,
   registerUser,
   loginUser,
-  updateUserRoles,
+  getUserProfile,
+  updateUser,
   deleteUser,
 }

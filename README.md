@@ -29,7 +29,7 @@ El backend de **ReminderMap** proporciona una API RESTful desarrollada con Node.
 - **Lugares y Favoritos**: Posibilidad de añadir lugares de interés y marcarlos como favoritos.
 - **Notificaciones**: Notificaciones automáticas basadas en la ubicación del usuario.
 - **Carga de Imágenes**: Integración con Cloudinary para el almacenamiento de imágenes.
-  
+
 ## Tecnologías Utilizadas
 
 - **Node.js** y **Express** para el servidor y API.
@@ -46,24 +46,24 @@ El backend de **ReminderMap** proporciona una API RESTful desarrollada con Node.
 
 ## Instalación
 
-1.Clona el repositorio:
+1. Clona el repositorio:
 
-```bash
-git clone https://github.com/usuario/ReminderMap-Backend.git
-cd ReminderMap-Backend
+   ```bash
+   git clone https://github.com/usuario/ReminderMap-Backend.git
+   cd ReminderMap-Backend
    ```
 
-2.Instala las dependencias:
+2. Instala las dependencias:
 
-```bash
-npm install
-```
+   ```bash
+   npm install
+   ```
 
-3.Configura las variables de entorno (ver sección Configuración).
+3. Configura las variables de entorno (ver sección Configuración).
 
 ### Configuración
 
-Crea un archivo .env en la raíz del proyecto con las siguientes variables de entorno:
+Crea un archivo `.env` en la raíz del proyecto con las siguientes variables de entorno:
 
 ```plaintext
 PORT=3000
@@ -74,10 +74,10 @@ CLOUDINARY_API_KEY=tu_api_key
 CLOUDINARY_API_SECRET=tu_api_secret
 ```
 
-- **`PORT`** Puerto en el que se ejecutará el servidor.
-- **`MONGO_URI: URI`** de la base de datos MongoDB.
-- **`JWT_SECRET:`** Clave secreta para la autenticación JWT.
-- **`CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET:`** Credenciales para Cloudinary.
+- **`PORT`**: Puerto en el que se ejecutará el servidor.
+- **`MONGO_URI`**: URI de la base de datos MongoDB.
+- **`JWT_SECRET`**: Clave secreta para la autenticación JWT.
+- **`CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET`**: Credenciales para Cloudinary.
 
 ### Estructura de Carpetas
 
@@ -105,7 +105,7 @@ Para iniciar el servidor en modo desarrollo:
 npm run dev
 ```
 
-El servidor se ejecutará en  **`http://localhost:3000`** (o el puerto que hayas configurado en el archivo .env).
+El servidor se ejecutará en **`http://localhost:3000`** (o el puerto que hayas configurado en el archivo .env).
 
 ## API Endpoints
 
@@ -113,47 +113,48 @@ Aquí tienes un resumen de los principales endpoints. Todos los endpoints tienen
 
 ### Autenticación de Usuarios
 
-- **`POST /users/register`**- Registrar un nuevo usuario.
+- **`POST /users/register`** - Registrar un nuevo usuario.
 - **`POST /users/login`** - Iniciar sesión y recibir un token JWT.
 
 ### Recordatorios
 
-- **`POST /reminders`**- Crear un nuevo recordatorio.
-- **`GET /reminders/:userId`**- Obtener recordatorios de un usuario.
-- **`PUT /reminders/:id`**- Actualizar un recordatorio.
-- **`DELETE /reminders/:id`**- Eliminar un recordatorio.
+- **`POST /reminders`** - Crear un nuevo recordatorio.
+- **`GET /reminders/user/:userId`** - Obtener recordatorios de un usuario.
+- **`GET /reminders/:id`** - Obtener un recordatorio por ID.
+- **`PUT /reminders/:id`** - Actualizar un recordatorio.
+- **`DELETE /reminders/:id`** - Eliminar un recordatorio.
 
 ### Lugares
 
-- **`POST /places`**- Crear un nuevo lugar.
-- **`GET /places`**- Obtener todos los lugares.
-- **`GET /places/:id`**- Obtener un lugar por ID.
-- **`PUT /places/:id`**- Actualizar un lugar.
-- **`DELETE /places/:id`**- Eliminar un lugar.
+- **`POST /places`** - Crear un nuevo lugar.
+- **`GET /places`** - Obtener todos los lugares.
+- **`GET /places/:id`** - Obtener un lugar por ID.
+- **`PUT /places/:id`** - Actualizar un lugar.
+- **`DELETE /places/:id`** - Eliminar un lugar.
 
 ### Favoritos
 
-- **`POST /favorites`**- Añadir un lugar a favoritos.
-- **`GET /favorites/:userId`**- Obtener lugares favoritos de un usuario.
-- **`DELETE /favorites/:userId/:placeId`**- Eliminar un lugar de favoritos.
+- **`POST /favorites`** - Añadir un lugar a favoritos.
+- **`GET /favorites/:userId`** - Obtener lugares favoritos de un usuario.
+- **`DELETE /favorites/:userId/:placeId`** - Eliminar un lugar de favoritos.
 
 ### Notificaciones
 
-- **`POST /notifications`**- Crear una notificación.
-- **`GET /notifications/:userId`**- Obtener notificaciones de un usuario.
-- **`PUT /notifications/:id/read`**- Marcar una notificación como leída.
-- **`DELETE /notifications/:id`**- Eliminar una notificación.
+- **`POST /notifications`** - Crear una notificación.
+- **`GET /notifications/:userId`** - Obtener notificaciones de un usuario.
+- **`PUT /notifications/:id/read`** - Marcar una notificación como leída.
+- **`DELETE /notifications/:id`** - Eliminar una notificación.
 
-Nota: Algunos endpoints requieren autenticación. Envía el token JWT en el header Authorization: Bearer token.
+Nota: Algunos endpoints requieren autenticación. Envía el token JWT en el header `Authorization: Bearer token`.
 
 ## Contribuciones
 
 Las contribuciones son bienvenidas. Si deseas contribuir, por favor sigue los siguientes pasos:
 
 - Haz un fork del repositorio.
-- Crea una nueva rama para tu funcionalidad (git checkout -b nueva-funcionalidad).
-- Haz commit de tus cambios (git commit -m 'Añadir nueva funcionalidad').
-- Haz push a la rama (git push origin nueva-funcionalidad).
+- Crea una nueva rama para tu funcionalidad (`git checkout -b nueva-funcionalidad`).
+- Haz commit de tus cambios (`git commit -m 'Añadir nueva funcionalidad'`).
+- Haz push a la rama (`git push origin nueva-funcionalidad`).
 - Abre un Pull Request.
 
 ## Licencia

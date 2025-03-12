@@ -3,7 +3,10 @@ const LocationCategory = require("../models/LocationCategory.model");
 // Crear una categoría
 const createLocationCategory = async (req, res) => {
   try {
-    const locationCategory = new LocationCategory(req.body);
+    const locationCategory = new LocationCategory({
+      ...req.body,
+      userId: req.user._id  // Asegura que se use el ID del usuario autenticado
+    });
     const savedCategory = await locationCategory.save();
     res.status(201).json(savedCategory);
   }
@@ -26,14 +29,26 @@ const getLocationCategory = async (req, res) => {
 // Obtener una categoría por ID
 const getLocationCategoryById = async (req, res) => {
   try {
-    const { id } = req.params;
-    const locationCategory = await LocationCategory.findById(req.params.id);
+    const category = await LocationCategory.findById(req.params.id)
+      .populate({
+        path: 'place',
+        select: 'name location'
+      });
 
-    if (!locationCategory) return res.status(404).json({ message: 'Categoría no encontrada' });
-    res.status(200).json(locationCategory);
-  }
-  catch (error) {
-    res.status(500).json({ message: 'Error al obtener la categoría', error });
+    if (!category) {
+      return res.status(404).json({
+        message: 'Categoría no encontrada',
+        éxito: false
+      });
+    }
+
+    res.status(200).json(category);
+  } catch (error) {
+    res.status(500).json({
+      message: 'Error al obtener la categoría',
+      error: error.message,
+      éxito: false
+    });
   }
 };
 

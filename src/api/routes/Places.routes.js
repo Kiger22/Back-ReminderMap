@@ -5,12 +5,14 @@ const {
   getPlaces,
   getPlaceById,
   updatePlace,
-  deletePlace } = require('../controllers/Place.controllers');
+  deletePlace,
+  getFavoritePlaces } = require('../controllers/Place.controllers');
 
 // Rutas para los lugares
 placesRoutes.post('/', createPlace);
 placesRoutes.get('/', getPlaces);
 placesRoutes.get('/:id', getPlaceById);
+placesRoutes.get('/', getFavoritePlaces);
 placesRoutes.put('/:id', updatePlace);
 placesRoutes.delete('/:id', deletePlace);
 

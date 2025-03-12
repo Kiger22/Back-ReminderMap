@@ -25,7 +25,10 @@ const isAuth = async (req, res, next) => {
     next();
   }
   catch (error) {
-    return res.status(401).json({ mensaje: "Token inválido o expirado" });
+    return res.status(401).json({
+      mensaje: error.message || "Token inválido o expirado",
+      éxito: false
+    });
   }
 };
 
@@ -46,11 +49,17 @@ const isAdmin = async (req, res, next) => {
       req.user = user;
       next();
     } else {
-      return res.status(403).json({ mensaje: "No está autorizado para realizar esta acción" });
+      return res.status(403).json({
+        mensaje: "No está autorizado para realizar esta acción",
+        éxito: false
+      });
     }
   }
   catch (error) {
-    return res.status(500).json({ mensaje: "Error del servidor o token inválido" });
+    return res.status(401).json({
+      mensaje: error.message || "Token inválido o expirado",
+      éxito: false
+    });
   }
 };
 

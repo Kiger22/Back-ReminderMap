@@ -29,7 +29,9 @@ const userSchema = new mongoose.Schema(
 );
 
 userSchema.pre("save", function () {
+  console.log("Contraseña antes de Hashear:", this.password);
   this.password = bcrypt.hashSync(this.password, 10);
+  console.log("Contraseña Hasheada:", this.password);
 })
 
 const User = mongoose.model("users", userSchema, "users");
