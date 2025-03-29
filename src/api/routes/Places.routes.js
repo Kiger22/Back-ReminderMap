@@ -1,19 +1,26 @@
 const express = require('express');
-const placesRoutes = express.Router();
+const router = express.Router();
 const {
   createPlace,
   getPlaces,
   getPlaceById,
   updatePlace,
   deletePlace,
-  getFavoritePlaces } = require('../controllers/Place.controllers');
+  getFavoritePlaces,
+  getPlacesByUser,
+  incrementUseCount
+} = require('../controllers/Place.controllers');
 
 // Rutas para los lugares
-placesRoutes.post('/', createPlace);
-placesRoutes.get('/', getPlaces);
-placesRoutes.get('/:id', getPlaceById);
-placesRoutes.get('/', getFavoritePlaces);
-placesRoutes.put('/:id', updatePlace);
-placesRoutes.delete('/:id', deletePlace);
+router.post('/', createPlace);
+router.get('/user/:userId', getPlacesByUser);
+router.get('/', getPlaces);
+router.get('/:id', getPlaceById);
+router.get('/favorites', getFavoritePlaces);
+router.put('/:id', updatePlace);
+router.delete('/:id', deletePlace);
 
-module.exports = placesRoutes;
+// Ruta para el incremento del contador
+router.put('/:id/increment-use', incrementUseCount);
+
+module.exports = router;

@@ -1,6 +1,6 @@
 const { cloudinary } = require('../config/cldry');
 
-// Función para probar la conexión
+//? Función para probar la conexión para Cloudinary
 const testConnection = async () => {
   try {
     const result = await cloudinary.api.ping();
@@ -11,11 +11,11 @@ const testConnection = async () => {
   }
 };
 
-// Función para probar la subida de archivos
+//? Función para probar la subida de archivos
 const testUpload = async () => {
   try {
     const result = await cloudinary.uploader.upload(
-      "C:/Users/Utilizador/Desktop/test.jpg",
+      "../upload/aboutMe.jpeg",
       {
         folder: "test",
         resource_type: "auto"
@@ -30,7 +30,7 @@ const testUpload = async () => {
   }
 };
 
-// Función para probar el borrado de archivos
+//? Función para probar el borrado de archivos
 const testDestroy = async (publicId) => {
   try {
     const result = await cloudinary.uploader.destroy(publicId);
@@ -41,7 +41,7 @@ const testDestroy = async (publicId) => {
   }
 };
 
-// Ejecutar todas las pruebas secuencialmente
+//? Ejecutar todas las pruebas secuencialmente
 const runAllTests = async () => {
   console.log('Iniciando pruebas de Cloudinary...\n');
 

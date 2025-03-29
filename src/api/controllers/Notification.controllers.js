@@ -1,6 +1,6 @@
 const Notification = require("../models/Notification.model");
 
-// Crear una nueva notificación
+//? Crear una nueva notificación
 const createNotification = async (req, res) => {
   try {
     const notification = new Notification(req.body);
@@ -12,7 +12,7 @@ const createNotification = async (req, res) => {
   }
 };
 
-// Obtener todas las notificaciones de un usuario
+//? Obtener todas las notificaciones de un usuario
 const getNotificationsByUser = async (req, res) => {
   try {
     const { userId } = req.params;
@@ -24,7 +24,7 @@ const getNotificationsByUser = async (req, res) => {
   }
 };
 
-// Marcar una notificación como leída
+//? Marcar una notificación como leída
 const markNotificationAsRead = async (req, res) => {
   try {
     const { id } = req.params;
@@ -42,7 +42,7 @@ const markNotificationAsRead = async (req, res) => {
   }
 };
 
-// Eliminar una notificación
+//? Eliminar una notificación
 const deleteNotification = async (req, res) => {
   try {
     const { id } = req.params;

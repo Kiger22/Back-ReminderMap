@@ -1,7 +1,7 @@
 const Reminder = require("../models/Reminder.model");
 const mongoose = require("mongoose");
 
-//* Creamos un nuevo recordatorio
+//? Crear un nuevo recordatorio
 const createReminder = async (req, res, next) => {
   try {
     const { userId, name, description, date, time, location } = req.body;
@@ -36,9 +36,9 @@ const createReminder = async (req, res, next) => {
       location,
       createdAt: new Date()
     });
-
     const savedReminder = await newReminder.save();
 
+    // Devolvemos el recordatorio creado
     return res.status(201).json({
       mensaje: "Recordatorio creado correctamente",
       recordatorio: savedReminder,
@@ -54,7 +54,7 @@ const createReminder = async (req, res, next) => {
   }
 };
 
-//* Obtenemos recordatorios de un usuario
+//? Obtener recordatorios de un usuario
 const getUserReminders = async (req, res, next) => {
   try {
     const userId = req.params.userId;
@@ -64,6 +64,7 @@ const getUserReminders = async (req, res, next) => {
       return res.status(400).json({ mensaje: "ID de usuario inválido", éxito: false });
     }
 
+    // Obtenemos y devolvemos los recordatorios del usuario
     const reminders = await Reminder.find({ userId }).sort({ date: 1, time: 1 });
 
     return res.status(200).json({
@@ -80,7 +81,7 @@ const getUserReminders = async (req, res, next) => {
   }
 };
 
-//* Actualizamos un recordatorio
+//? Actualizar un recordatorio
 const updateReminder = async (req, res, next) => {
   try {
     const reminderId = req.params.id;
@@ -98,12 +99,15 @@ const updateReminder = async (req, res, next) => {
     if (req.body.time && /^\d{2}:\d{2}$/.test(req.body.time)) updates.time = req.body.time;
     if (req.body.location && typeof req.body.location === 'string') updates.location = req.body.location;
 
+    // Actualizamos el recordatorio
     const updatedReminder = await Reminder.findByIdAndUpdate(reminderId, updates, { new: true });
 
+    // Si no se encuentra el recordatorio, devolvemos un error
     if (!updatedReminder) {
       return res.status(404).json({ mensaje: "Recordatorio no encontrado", éxito: false });
     }
 
+    // Devolvemos el recordatorio actualizado
     return res.status(200).json({
       mensaje: "Recordatorio actualizado correctamente",
       recordatorio: updatedReminder,
@@ -119,7 +123,7 @@ const updateReminder = async (req, res, next) => {
   }
 };
 
-//*Eliminamos un recordatorio
+//? Eliminar un recordatorio
 const deleteReminder = async (req, res, next) => {
   try {
     const reminderId = req.params.id;
@@ -129,12 +133,15 @@ const deleteReminder = async (req, res, next) => {
       return res.status(400).json({ mensaje: "ID de recordatorio inválido", éxito: false });
     }
 
+    // Eliminamos el recordatorio
     const deletedReminder = await Reminder.findByIdAndDelete(reminderId);
 
+    // Si no se encuentra el recordatorio, devolvemos un error
     if (!deletedReminder) {
       return res.status(404).json({ mensaje: "Recordatorio no encontrado", éxito: false });
     }
 
+    // Devolvemos el mensaje de éxito al eliminar el recordatorio
     return res.status(200).json({
       mensaje: "Recordatorio eliminado correctamente",
       éxito: true

@@ -28,11 +28,25 @@ const userSchema = new mongoose.Schema(
   }
 );
 
-userSchema.pre("save", function () {
-  console.log("Contraseña antes de Hashear:", this.password);
-  this.password = bcrypt.hashSync(this.password, 10);
-  console.log("Contraseña Hasheada:", this.password);
-})
+userSchema.pre("save", async function (next) {
+  try {
+    // Solo hash la contraseña si ha sido modificada o es nueva
+    if (!this.isModified('password')) {
+      return next();
+    }
+
+    // Asegurarse de que la contraseña esté limpia antes de hashear
+    this.password = this.password.trim();
+    console.log("Contraseña antes de Hashear:", this.password);
+
+    const salt = await bcrypt.genSalt(10);
+    this.password = await bcrypt.hash(this.password, salt);
+    console.log("Contraseña Hasheada:", this.password);
+    next();
+  } catch (error) {
+    next(error);
+  }
+});
 
 const User = mongoose.model("users", userSchema, "users");
 module.exports = User;

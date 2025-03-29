@@ -15,10 +15,7 @@ const userRoutes = require("express").Router();
 userRoutes.get("/", [isAdmin], getUser);
 
 // Ruta para registrar un nuevo usuario
-userRoutes.post("/register", upload('avatars').single('avatar'), (req, res, next) => {
-  console.log(req.file); // Verificamos que el archivo se haya subido correctamente
-  next();
-}, registerUser);
+userRoutes.post("/register", upload('avatars').single('avatar'), registerUser);
 
 // Ruta para iniciar sesión
 userRoutes.post("/login", loginUser);
@@ -27,7 +24,7 @@ userRoutes.post("/login", loginUser);
 userRoutes.get("/:id/profile", [isAuth], getUserProfile);
 
 // Ruta para actualizar un usuario
-userRoutes.put("/:id", [isAuth], updateUser);
+userRoutes.put("/:id", [isAuth], upload('avatars').single('avatar'), updateUser);
 
 // Ruta para eliminar un usuario
 userRoutes.delete("/:id", [isAuth], deleteUser);

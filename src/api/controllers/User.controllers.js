@@ -2,7 +2,7 @@ const bcrypt = require("bcrypt");
 const User = require("../models/User.model");
 const { generateSign } = require("../../config/jwt");
 
-//!Obtener usuarios
+//? Obtener usuarios
 const getUser = async (req, res, next) => {
   try {
     const user = await User.find();
@@ -16,45 +16,40 @@ const getUser = async (req, res, next) => {
   }
 };
 
-//!Registrar nuevo usuario
+//? Registrar nuevo usuario
 const registerUser = async (req, res, next) => {
   try {
     const { name, username, email, password } = req.body;
 
-    // Verificamos si se subió un avatar
-    const avatarUrl = req.file ? req.file.path : 'default-avatar-url';
+    // Verificamos si se subió un avatar o usamos uno por defecto
+    const avatarUrl = req.file ? req.file.path : 'uploads/avatars/default-avatar.png';
 
     // Verificamos si el usuario ya existe por nombre de usuario
     const existingUser = await User.findOne({ username });
     if (existingUser) {
       return res.status(400).json({
-        mensaje: "Este nombre de usuario ya está registrado",
-        éxito: false
+        success: false,
+        message: "Este nombre de usuario ya está registrado"
       });
     }
 
-    // Creamos nuevo usuario con contraseña encriptada
-    const saltRounds = 10;
-    const hashedPassword = await bcrypt.hash(password.trim(), saltRounds);
-    console.log("Contraseña hasheada antes de guardar:", hashedPassword);
-
+    // Creamos nuevo usuario
     const newUser = new User({
       name,
       username,
       email,
-      password: hashedPassword,
-      avatar: avatarUrl, // Aseguramos que se guarde la URL del avatar
-      role: "user", // Asignamos rol predeterminado
+      password,
+      avatar: avatarUrl,
+      role: "user",
       createdAt: new Date()
     });
 
     // Guardamos el usuario en la base de datos
     const savedUser = await newUser.save();
 
-    // Aseguramos que la respuesta incluya la URL del avatar
     return res.status(201).json({
-      éxito: true,
-      mensaje: "Usuario registrado correctamente",
+      success: true,
+      message: "Usuario registrado correctamente",
       user: {
         _id: savedUser._id,
         name: savedUser.name,
@@ -64,15 +59,40 @@ const registerUser = async (req, res, next) => {
       }
     });
   } catch (error) {
-    next(error);
+    console.error('Error en registerUser:', error);
+    return res.status(500).json({
+      success: false,
+      message: "Error al registrar usuario",
+      error: error.message
+    });
   }
 };
 
-//!Login
+//? Login
 const loginUser = async (req, res, next) => {
   try {
-    // Buscamos usuario por nombre de usuario
-    const user = await User.findOne({ username: req.body.username });
+    const { username, password } = req.body;
+    console.log('Datos recibidos:', {
+      username,
+      passwordLength: password?.length,
+      passwordTrimmed: password?.trim()?.length
+    });
+
+    // Validación de campos
+    if (!username || !password) {
+      return res.status(400).json({
+        mensaje: "Usuario y contraseña son requeridos",
+        éxito: false
+      });
+    }
+
+    // Buscamos usuario por username
+    const user = await User.findOne({ username });
+    console.log('Usuario encontrado:', {
+      found: !!user,
+      hashedPassword: user?.password?.substring(0, 20) + '...' // Solo mostramos parte del hash
+    });
+
     if (!user) {
       return res.status(401).json({
         mensaje: "Usuario no encontrado",
@@ -80,29 +100,45 @@ const loginUser = async (req, res, next) => {
       });
     }
 
-    // Verificamos contraseña
-    const passwordMatch = bcrypt.compare(req.body.password.trim(), user.password);
-    if (!passwordMatch) {
-      return res.status(401).json({
-        mensaje: "Contraseña incorrecta",
+    try {
+      console.log('Datos para comparación:', {
+        passwordInput: password.trim(),
+        hashedPasswordInDB: user.password
+      });
+
+      const passwordMatch = await bcrypt.compare(password.trim(), user.password);
+      console.log('Resultado de comparación:', passwordMatch);
+
+      if (!passwordMatch) {
+        return res.status(401).json({
+          mensaje: "Contraseña incorrecta",
+          éxito: false
+        });
+      }
+
+      // Si llegamos aquí, la contraseña es correcta
+      const token = generateSign(user._id);
+      const userWithoutPassword = user.toObject();
+      delete userWithoutPassword.password;
+
+      return res.status(200).json({
+        mensaje: "Login correcto",
+        token,
+        user: userWithoutPassword,
+        éxito: true
+      });
+
+    } catch (bcryptError) {
+      console.error('Error específico de bcrypt:', bcryptError);
+      return res.status(500).json({
+        mensaje: "Error al verificar contraseña",
+        error: bcryptError.message,
         éxito: false
       });
     }
 
-    // Generamos token de autenticación
-    const token = generateSign(user._id);
-
-    // Evitamos devolver la contraseña en la respuesta
-    const userWithoutPassword = user.toObject();
-    delete userWithoutPassword.password;
-
-    return res.status(200).json({
-      mensaje: "Login correcto",
-      token: token,
-      user: userWithoutPassword,
-      éxito: true
-    });
   } catch (error) {
+    console.error('Error general en loginUser:', error);
     return res.status(500).json({
       mensaje: "Error al iniciar sesión",
       error: error.message,
@@ -111,7 +147,7 @@ const loginUser = async (req, res, next) => {
   }
 };
 
-//!Obtener perfil de usuario
+//? Obtener perfil de usuario
 const getUserProfile = async (req, res, next) => {
   try {
     const userId = req.params.id;
@@ -125,11 +161,13 @@ const getUserProfile = async (req, res, next) => {
       });
     }
 
+    // Evitamos devolver la contraseña en la respuesta
     return res.status(200).json({
       usuario: user,
       éxito: true
     });
-  } catch (error) {
+  }
+  catch (error) {
     return res.status(500).json({
       mensaje: "Error al obtener perfil de usuario",
       error: error.message,
@@ -138,55 +176,58 @@ const getUserProfile = async (req, res, next) => {
   }
 };
 
-//!Actualizar usuario
+//? Actualizar usuario
 const updateUser = async (req, res, next) => {
   try {
-    const userId = req.params.id;
+    const { id } = req.params;
+    const updateData = { ...req.body };
 
-    // Verificamos si el usuario tiene permisos
-    if (req.user._id.toString() !== userId && req.user.role !== 'admin') {
-      return res.status(403).json({
-        mensaje: "No tienes permiso para actualizar este usuario",
-        éxito: false
-      });
+    // Si hay un nuevo avatar para subir
+    if (req.file) {
+      updateData.avatar = req.file.path;
     }
 
-    // Encriptar, si se intenta actualizar la contraseña
-    if (req.body.password) {
-      const saltRounds = 10;
-      req.body.password = await bcrypt.hash(req.body.password.trim(), saltRounds);
-    }
+    // Eliminamos campos vacíos
+    Object.keys(updateData).forEach(key => {
+      if (!updateData[key]) delete updateData[key];
+    });
 
-    // Actualizamos datos del usuario
+    // Actualizamos el usuario
     const updatedUser = await User.findByIdAndUpdate(
-      userId,
-      { ...req.body },
+      id,
+      updateData,
       { new: true }
-    ).select("-password");
+    );
 
+    // Si no se encuentra el usuario, devolvemos un error
     if (!updatedUser) {
       return res.status(404).json({
-        mensaje: "Usuario no encontrado",
-        éxito: false
+        success: false,
+        message: "Usuario no encontrado"
       });
     }
 
+    // Devolvemos el usuario actualizado
+    // Evitamos devolver la contraseña en la respuesta
     return res.status(200).json({
-      mensaje: "Usuario actualizado correctamente",
-      usuario: updatedUser,
-      éxito: true
+      success: true,
+      message: "Usuario actualizado correctamente",
+      user: {
+        _id: updatedUser._id,
+        name: updatedUser.name,
+        email: updatedUser.email,
+        avatar: updatedUser.avatar,
+        myHouseLocation: updatedUser.myHouseLocation,
+        myWorkLocation: updatedUser.myWorkLocation
+      }
     });
   }
   catch (error) {
-    return res.status(500).json({
-      mensaje: "Error al actualizar usuario",
-      error: error.message,
-      éxito: false
-    });
+    next(error);
   }
 };
 
-//!Eliminar usuario
+//? Eliminar usuario
 const deleteUser = async (req, res, next) => {
   try {
     const userId = req.params.id;
@@ -202,6 +243,7 @@ const deleteUser = async (req, res, next) => {
     // Eliminamos usuario
     const deletedUser = await User.findByIdAndDelete(userId);
 
+    // Si no se encuentra el usuario, devolvemos un error
     if (!deletedUser) {
       return res.status(404).json({
         mensaje: "Usuario no encontrado",
@@ -209,11 +251,13 @@ const deleteUser = async (req, res, next) => {
       });
     }
 
+    // Devolvemos la respuesta con éxito
     return res.status(200).json({
       mensaje: "Usuario eliminado correctamente",
       éxito: true
     });
-  } catch (error) {
+  }
+  catch (error) {
     return res.status(500).json({
       mensaje: "Error al eliminar usuario",
       error: error.message,

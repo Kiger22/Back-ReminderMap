@@ -1,85 +1,179 @@
 const LocationCategory = require("../models/LocationCategory.model");
+const mongoose = require('mongoose');
 
-// Crear una categoría
+//? Crear una categoría
 const createLocationCategory = async (req, res) => {
   try {
+    const { name, description, userId } = req.body;
+
+    console.log('Datos recibidos en el servidor:', req.body); // Debug
+
+    if (!name || !userId) {
+      return res.status(400).json({
+        message: 'El nombre y userId son requeridos',
+        success: false
+      });
+    }
+
+    // Validamos que el userId es válido
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+      return res.status(400).json({
+        message: 'userId inválido',
+        success: false
+      });
+    }
+
     const locationCategory = new LocationCategory({
-      ...req.body,
-      userId: req.user._id  // Asegura que se use el ID del usuario autenticado
+      name,
+      description: description || '',
+      userId,
+      places: [] // Inicializamos el array de lugares vacío
     });
+
     const savedCategory = await locationCategory.save();
-    res.status(201).json(savedCategory);
+
+    return res.status(201).json({
+      message: 'Categoría creada exitosamente',
+      category: savedCategory,
+      success: true
+    });
   }
   catch (error) {
-    res.status(400).json({ message: 'Error al crear la categoría', error });
+    console.error('Error detallado al crear categoría:', error);
+    return res.status(500).json({
+      message: 'Error al crear la categoría',
+      error: error.message,
+      success: false
+    });
   }
 };
 
-// Obtener todas las categorías
+//? Obtener todas las categorías
 const getLocationCategory = async (req, res) => {
   try {
-    const locationCategory = await LocationCategory.find();
-    res.status(200).json(locationCategory);
+    const { userId } = req.query; // Opcional: filtrar por userId
+
+    const query = userId ? { userId } : {};
+    const locationCategories = await LocationCategory.find(query)
+      .populate('places', 'name location')
+      .sort({ createdAt: -1 });
+
+    res.status(200).json({
+      categories: locationCategories,
+      success: true
+    });
   }
   catch (error) {
-    res.status(500).json({ message: 'Error al obtener categorías', error });
+    res.status(500).json({
+      message: 'Error al obtener categorías',
+      error: error.message,
+      success: false
+    });
   }
 };
 
-// Obtener una categoría por ID
+//? Obtener una categoría por ID
 const getLocationCategoryById = async (req, res) => {
   try {
     const category = await LocationCategory.findById(req.params.id)
-      .populate({
-        path: 'place',
-        select: 'name location'
-      });
+      .populate('places', 'name location description');
 
     if (!category) {
       return res.status(404).json({
         message: 'Categoría no encontrada',
-        éxito: false
+        success: false
       });
     }
 
-    res.status(200).json(category);
-  } catch (error) {
+    res.status(200).json({
+      category,
+      success: true
+    });
+  }
+  catch (error) {
     res.status(500).json({
       message: 'Error al obtener la categoría',
       error: error.message,
-      éxito: false
+      success: false
     });
   }
 };
 
-// Actualizar una categoría
+//? Actualizar una categoría
 const updateLocationCategory = async (req, res) => {
   try {
     const { id } = req.params;
-    const updatedLocationCategory = await LocationCategory.findByIdAndUpdate(
-      id,
-      req.body,
-      { new: true }
-    );
+    const { placeId, action, name, description } = req.body;
 
-    if (!updatedLocationCategory) return res.status(404).json({ message: 'Categoría no encontrada' });
-    res.status(200).json(updatedLocationCategory);
-  }
-  catch (error) {
-    res.status(400).json({ message: 'Error al actualizar la categoría', error });
+    const category = await LocationCategory.findById(id);
+
+    if (!category) {
+      return res.status(404).json({
+        message: 'Categoría no encontrada',
+        success: false
+      });
+    }
+
+    // Si se proporcionan datos básicos, actualizarlos
+    if (name) category.name = name;
+    if (description) category.description = description;
+
+    // Si se proporciona placeId y action, manejar lugares
+    if (placeId && action) {
+      if (action === 'add' && !category.places.includes(placeId)) {
+        category.places.push(placeId);
+      } else if (action === 'remove') {
+        category.places = category.places.filter(place =>
+          place.toString() !== placeId.toString()
+        );
+      }
+    }
+
+    await category.save();
+
+    // Obtener la categoría actualizada con los lugares populados
+    const updatedCategory = await LocationCategory.findById(id)
+      .populate('places', 'name location description');
+
+    res.status(200).json({
+      message: 'Categoría actualizada correctamente',
+      category: updatedCategory,
+      success: true
+    });
+  } catch (error) {
+    console.error('Error en updateLocationCategory:', error);
+    res.status(500).json({
+      message: 'Error al actualizar la categoría',
+      error: error.message,
+      success: false
+    });
   }
 };
 
-// Eliminar una categoría
+//? Eliminar categoría
 const deleteLocationCategory = async (req, res) => {
   try {
     const { id } = req.params;
     const deletedCategory = await LocationCategory.findByIdAndDelete(id);
-    if (!deletedCategory) return res.status(404).json({ message: 'Categoría no encontrada' });
-    res.status(200).json({ message: 'Categoría eliminada' });
+
+    if (!deletedCategory) {
+      return res.status(404).json({
+        message: 'Categoría no encontrada',
+        success: false
+      });
+    }
+
+    res.status(200).json({
+      message: 'Categoría eliminada correctamente',
+      success: true
+    });
   }
   catch (error) {
-    res.status(500).json({ message: 'Error al eliminar la categoría', error });
+    res.status(500).json({
+      message: 'Error al eliminar la categoría',
+      error: error.message,
+      success: false
+    });
   }
 };
 

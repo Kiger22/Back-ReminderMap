@@ -4,10 +4,9 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js",
-    "dev": "nodemon --inspect index.js",
-    "test": "node ./src/tests/cloudinaryTest.js",
-    "testhash": "node testhash.js"
+    "predev": "node scripts/kill-port.js",
+    "dev": "nodemon --inspect=9230 index.js",
+    "start": "node index.js"
   },
   "keywords": [],
   "author": "",

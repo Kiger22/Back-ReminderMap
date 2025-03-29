@@ -7,6 +7,8 @@ const { verifyJwt } = require("../config/jwt");
 const isAuth = async (req, res, next) => {
   try {
     const token = req.headers.authorization?.split(" ")[1];
+    console.log('Token recibido:', token);
+
 
     if (!token) {
       return res.status(401).json({ mensaje: "Token necesario" });
@@ -15,10 +17,13 @@ const isAuth = async (req, res, next) => {
     const { id } = verifyJwt(token);
     const user = await User.findById(id);
 
+    console.log('Usuario encontrado:', user);
+
     if (!user) {
       return res.status(403).json({ mensaje: "No está autorizado" });
     }
 
+    // Evitamos devolver la contraseña en la respuesta
     user.password = undefined;
     req.user = user;
     console.log({ UserAutenticado: id, Token: token });
@@ -36,6 +41,7 @@ const isAuth = async (req, res, next) => {
 const isAdmin = async (req, res, next) => {
   try {
     const token = req.headers.authorization?.split(" ")[1];
+    console.log('Token recibido:', token);
 
     if (!token) {
       return res.status(401).json({ mensaje: "Token necesario" });
@@ -43,7 +49,9 @@ const isAdmin = async (req, res, next) => {
 
     const { id } = verifyJwt(token);
     const user = await User.findById(id);
+    console.log('Usuario encontrado:', user);
 
+    // Evitamos devolver la contraseña en la respuesta
     if (user && user.role === "admin") {
       user.password = undefined;
       req.user = user;
