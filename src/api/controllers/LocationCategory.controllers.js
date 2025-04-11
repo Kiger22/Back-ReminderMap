@@ -53,10 +53,16 @@ const getLocationCategory = async (req, res) => {
   try {
     const { userId } = req.query; // Opcional: filtrar por userId
 
+    console.log('Solicitud de categorías recibida. UserId:', userId);
+
     const query = userId ? { userId } : {};
+    console.log('Consulta para buscar categorías:', query);
+
     const locationCategories = await LocationCategory.find(query)
       .populate('places', 'name location')
       .sort({ createdAt: -1 });
+
+    console.log(`Se encontraron ${locationCategories.length} categorías`);
 
     res.status(200).json({
       categories: locationCategories,
@@ -64,6 +70,7 @@ const getLocationCategory = async (req, res) => {
     });
   }
   catch (error) {
+    console.error('Error al obtener categorías:', error);
     res.status(500).json({
       message: 'Error al obtener categorías',
       error: error.message,

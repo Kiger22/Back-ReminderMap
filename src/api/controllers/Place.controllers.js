@@ -14,29 +14,31 @@ const createPlace = async (req, res, next) => {
     if (!location || typeof location !== 'string') {
       return res.status(400).json({ mensaje: "Ubicación inválida", éxito: false });
     }
-    if (!category || !mongoose.Types.ObjectId.isValid(category)) {
+    // Validamos la categoría solo si se proporciona
+    if (category && !mongoose.Types.ObjectId.isValid(category)) {
       return res.status(400).json({ mensaje: "Categoría inválida", éxito: false });
     }
     if (!userId || !mongoose.Types.ObjectId.isValid(userId)) {
       return res.status(400).json({ mensaje: "ID de usuario inválido", éxito: false });
     }
 
+    // Creamos el objeto lugar con o sin categoría
     const placeData = {
       name,
+      description: description || '',
       location,
-      category,
-      userId,
-      createdAt: new Date()
+      userId
     };
 
-    // La descripción es opcional
-    if (description) {
-      placeData.description = description;
+    // Solo añadimos la categoría si se proporciona
+    if (category) {
+      placeData.category = category;
     }
 
+    const place = new Place(placeData);
+
     // Creamos y guardamos el nuevo lugar
-    const newPlace = new Place(placeData);
-    const savedPlace = await newPlace.save();
+    const savedPlace = await place.save();
 
     return res.status(201).json({
       mensaje: "Lugar creado correctamente",
