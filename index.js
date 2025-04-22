@@ -4,6 +4,7 @@ const express = require('express');
 const mongoose = require('mongoose');
 const { connectDB } = require('./src/config/db');
 const mainRoutes = require('./src/api/routes/main.routes');
+const { cleanupPastReminders } = require('./src/utils/reminderCleanup');
 const app = express();
 
 const PORT = process.env.PORT || 3000;
@@ -137,3 +138,25 @@ app.use((err, req, res, next) => {
 });
 
 startServer();
+
+// Programar la limpieza de recordatorios pasados
+// Ejecutar inmediatamente al iniciar el servidor
+setTimeout(async () => {
+  try {
+    const removedCount = await cleanupPastReminders();
+    console.log(`Se eliminaron ${removedCount} recordatorios pasados al iniciar el servidor`);
+  } catch (error) {
+    console.error('Error al ejecutar limpieza inicial de recordatorios:', error);
+  }
+}, 5000);
+
+// Programar ejecución diaria (cada 24 horas)
+const CLEANUP_INTERVAL = 24 * 60 * 60 * 1000; // 24 horas en milisegundos
+setInterval(async () => {
+  try {
+    const removedCount = await cleanupPastReminders();
+    console.log(`Limpieza programada: se eliminaron ${removedCount} recordatorios pasados`);
+  } catch (error) {
+    console.error('Error al ejecutar limpieza programada de recordatorios:', error);
+  }
+}, CLEANUP_INTERVAL);

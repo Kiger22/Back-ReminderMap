@@ -1,49 +1,29 @@
-# Backend - ReminderMap
-
-Este es el backend de la aplicación **ReminderMap**, una aplicación de recordatorios basada en ubicación que permite a los usuarios recibir notificaciones y recordatorios cuando están en una ubicación específica o cerca de lugares de interés.
-
-## Tabla de Contenidos
-
-- [Descripción](#descripción)
-- [Características](#características)
-- [Tecnologías Utilizadas](#tecnologías-utilizadas)
-- [Estructura del Proyecto](#estructura-del-proyecto)
-- [Configuración y Desarrollo](#configuración-y-desarrollo)
-- [API Endpoints](#api-endpoints)
-  - [Usuarios](#usuarios)
-  - [Recordatorios](#recordatorios)
-  - [Lugares](#lugares)
-- [Guía de Implementación](#guía-de-implementación)
-  - [Manejo de Archivos con Cloudinary](#manejo-de-archivos-con-cloudinary)
-  - [Autenticación JWT](#autenticación-jwt)
-- [Seguridad](#seguridad)
-- [Manejo de Errores](#manejo-de-errores)
-- [Contribución](#contribución)
-- [Licencia](#licencia)
-
----
+# KGR Reminder Map - Backend
 
 ## Descripción
 
-El backend de **ReminderMap** proporciona una API RESTful desarrollada con Node.js, Express, y MongoDB. Permite a los usuarios crear y gestionar recordatorios basados en ubicación, almacenar lugares favoritos, y recibir notificaciones cuando están en lugares específicos.
+Backend para la aplicación KGR Reminder Map, un sistema de gestión de recordatorios basados en geolocalización. Esta API RESTful proporciona todas las funcionalidades necesarias para gestionar usuarios, recordatorios, lugares, categorías y notificaciones.
 
-## Características
+## Características Principales
 
 - **Autenticación de Usuarios**: Registro e inicio de sesión de usuarios
 - **Gestión de Recordatorios**: CRUD para recordatorios que se activan en ubicaciones específicas
 - **Lugares y Favoritos**: Posibilidad de añadir lugares de interés y marcarlos como favoritos
+- **Categorías de Ubicación**: Organización de lugares por categorías personalizadas
 - **Notificaciones**: Notificaciones automáticas basadas en la ubicación del usuario
 - **Gestión de Archivos**: Integración con Cloudinary para almacenamiento de imágenes
 - **Perfiles de Usuario**: Gestión completa de perfiles con avatares y ubicaciones personalizadas
+- **Limpieza Automática**: Eliminación automática de recordatorios vencidos
 
 ## Tecnologías Utilizadas
 
-- **Node.js** y **Express** para el servidor y API
-- **MongoDB** con Mongoose para la base de datos
-- **Cloudinary** para el almacenamiento de imágenes
-- **JWT** para la autenticación de usuarios
-- **Multer** para el manejo de archivos
-- **Bcrypt** para el hash de contraseñas
+- Node.js y Express.js para el servidor
+- MongoDB y Mongoose para la base de datos
+- JWT para autenticación
+- Bcrypt para encriptación de contraseñas
+- Cloudinary para almacenamiento de archivos
+- Multer para manejo de formularios multipart
+- Cors para gestión de CORS
 
 ## Estructura del Proyecto
 
@@ -52,17 +32,31 @@ src/
 ├── api/
 │   ├── controllers/     # Controladores de cada recurso
 │   │   ├── User.controllers.js
+│   │   ├── Reminder.controllers.js
+│   │   ├── Place.controllers.js
+│   │   ├── LocationCategory.controllers.js
+│   │   ├── Notification.controllers.js
 │   │   └── ...
 │   ├── models/         # Esquemas de Mongoose
 │   │   ├── User.model.js
+│   │   ├── Reminder.model.js
+│   │   ├── Places.model.js
+│   │   ├── LocationCategory.model.js
+│   │   ├── Notification.model.js
 │   │   └── ...
 │   └── routes/         # Definición de rutas
 │       ├── User.routes.js
-│       └── ...
+│       ├── Reminder.Routes.js
+│       ├── Places.routes.js
+│       ├── LocationCategory.Routes.js
+│       ├── Notifications.Routes.js
+│       └── main.routes.js
 ├── config/             # Configuraciones
 │   ├── db.js          # Configuración MongoDB
 │   ├── cldry.js       # Configuración Cloudinary
 │   └── jwt.js         # Configuración JWT
+├── functions/         # Funciones de utilidad
+│   └── reminderCleanup.js # Limpieza automática de recordatorios
 ├── utils/             # Utilidades
 │   └── portManager.js # Gestión de puertos
 ├── middlewares/        # Middlewares
@@ -106,142 +100,49 @@ npm start
 - `npm start`: Inicia el servidor en modo producción
 - `npm run predev`: Limpia los puertos en uso antes de iniciar el desarrollo
 
-### Gestión de Puertos
-
-El sistema incluye un gestor de puertos automático que:
-
-- Limpia los puertos necesarios antes de iniciar el servidor
-- Maneja los puertos 3000 (aplicación) y 9229/9230 (debugger)
-- Proporciona recuperación automática si los puertos están en uso
-
 ## API Endpoints
+
+### Autenticación
+
+- **POST /api/v1/users/register**: Registro de usuario
+- **POST /api/v1/users/login**: Inicio de sesión
 
 ### Usuarios
 
-#### Registro de Usuario
-
-- **Ruta**: `POST /api/v1/users/register`
-- **Body**: FormData
-
-  ```json
-  {
-    "username": "string",
-    "password": "string",
-    "email": "string",
-    "avatar": "file"
-  }
-  ```
-
-#### Login
-
-- **Ruta**: `POST /api/v1/users/login`
-- **Body**:
-
-  ```json
-  {
-    "username": "string",
-    "password": "string"
-  }
-  ```
-
-#### Actualizar Usuario
-
-- **Ruta**: `PUT /api/v1/users/:id`
-- **Auth**: Bearer Token
-- **Body**: FormData
-
-  ```json
-  {
-    "name": "string (opcional)",
-    "email": "string (opcional)",
-    "avatar": "file (opcional)",
-    "myHouseLocation": "string (opcional)",
-    "myWorkLocation": "string (opcional)"
-  }
-  ```
+- **GET /api/v1/users/:id**: Obtener usuario por ID
+- **PUT /api/v1/users/:id**: Actualizar usuario
+- **DELETE /api/v1/users/:id**: Eliminar usuario
 
 ### Recordatorios
 
-- **GET /api/v1/reminders**: Obtener todos los recordatorios
+- **GET /api/v1/reminders/:userId**: Obtener recordatorios de un usuario
 - **POST /api/v1/reminders**: Crear recordatorio
 - **PUT /api/v1/reminders/:id**: Actualizar recordatorio
 - **DELETE /api/v1/reminders/:id**: Eliminar recordatorio
 
 ### Lugares
 
-- **GET /api/v1/places**: Obtener lugares
+- **GET /api/v1/places**: Obtener todos los lugares
+- **GET /api/v1/places/user/:userId**: Obtener lugares de un usuario
 - **POST /api/v1/places**: Crear lugar
 - **PUT /api/v1/places/:id**: Actualizar lugar
 - **DELETE /api/v1/places/:id**: Eliminar lugar
+- **PUT /api/v1/places/:id/increment-use**: Incrementar contador de uso
 
-## Guía de Implementación
+### Categorías
 
-### Manejo de Archivos con Cloudinary
+- **GET /api/v1/categories**: Obtener todas las categorías
+- **GET /api/v1/categories/:id**: Obtener categoría por ID
+- **POST /api/v1/categories**: Crear categoría
+- **PUT /api/v1/categories/:id**: Actualizar categoría
+- **DELETE /api/v1/categories/:id**: Eliminar categoría
 
-```javascript
-// Configuración de Cloudinary
-const cloudinary = require('cloudinary').v2;
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET
-});
+### Notificaciones
 
-// Middleware de Multer para subida de archivos
-const upload = multer({
-  storage: multerStorage,
-  fileFilter: (req, file, cb) => {
-    if (file.mimetype.startsWith('image/')) {
-      cb(null, true);
-    } else {
-      cb(new Error('Formato no soportado'), false);
-    }
-  }
-});
-```
-
-### Autenticación JWT
-
-```javascript
-const jwt = require('jsonwebtoken');
-
-const generateToken = (userId) => {
-  return jwt.sign({ id: userId }, process.env.JWT_SECRET, {
-    expiresIn: '1y'
-  });
-};
-```
-
-## Seguridad
-
-- Implementación de JWT para autenticación
-- Hash de contraseñas con bcrypt
-- Validación de tipos de archivo
-- Sanitización de datos de entrada
-- Manejo seguro de variables de entorno
-
-## Manejo de Errores
-
-- Implementación de try-catch en controladores
-- Respuestas de error estandarizadas
-- Logging de errores
-- Validación de datos de entrada
-
-## Contribución
-
-1. Fork del repositorio
-2. Crear rama feature (`git checkout -b feature/NuevaCaracteristica`)
-3. Commit cambios (`git commit -m 'Añadir nueva característica'`)
-4. Push a la rama (`git push origin feature/NuevaCaracteristica`)
-5. Crear Pull Request
-
-## Licencia
-
-Este proyecto está bajo la Licencia (Tu Licencia) - mira el archivo [LICENSE.md](LICENSE.md) para detalles
-
----
-
-**⌨️ por [kiger22](https://github.com/Kiger22)**
+- **GET /api/v1/notifications/:userId**: Obtener notificaciones de un usuario
+- **POST /api/v1/notifications**: Crear notificación
+- **PUT /api/v1/notifications/:id**: Marcar notificación como leída
+- **DELETE /api/v1/notifications/:id**: Eliminar notificación
 
 ## Modelos de Datos
 
@@ -281,32 +182,50 @@ Este proyecto está bajo la Licencia (Tu Licencia) - mira el archivo [LICENSE.md
 
 ```javascript
 {
-  name: String,         // required
-  category: ObjectId,   // ref: 'locationCategories'
+  userId: ObjectId,      // required, ref: 'users'
+  name: String,          // required
   description: String,
-  location: String,     // required
-  address: String,
-  isFavorite: Boolean,  // default: false
-  useCount: Number      // default: 0
+  location: String,      // required
+  category: ObjectId,    // ref: 'locationCategories'
+  useCount: Number,      // default: 0
+  isFavorite: Boolean    // default: false
 }
 ```
 
-## Middlewares
+## Seguridad
 
-### Autenticación
+- Implementación de JWT para autenticación
+- Hash de contraseñas con bcrypt
+- Validación de tipos de archivo
+- Sanitización de datos de entrada
+- Manejo seguro de variables de entorno
 
-```javascript
-// Ejemplo de uso
-router.get('/protected', [isAuth], controller);
-router.get('/admin', [isAdmin], controller);
-```
+## Mantenimiento Automático
 
-### Manejo de Archivos
+### Limpieza de Recordatorios
 
-```javascript
-// Ejemplo de uso
-router.post('/upload', upload('avatars').single('avatar'), controller);
-```
+El sistema incluye un mecanismo automático para eliminar recordatorios vencidos:
+
+- Se ejecuta al iniciar el servidor y luego cada 24 horas
+- Elimina recordatorios cuya fecha y hora ya han pasado
+- Actualiza los contadores de uso de lugares asociados
+- Registra información detallada en los logs del sistema
+
+## Contribución
+
+1. Fork del repositorio
+2. Crear rama feature (`git checkout -b feature/NuevaCaracteristica`)
+3. Commit cambios (`git commit -m 'Añadir nueva característica'`)
+4. Push a la rama (`git push origin feature/NuevaCaracteristica`)
+5. Crear Pull Request
+
+## Licencia
+
+Este proyecto está bajo la Licencia MIT - ver el archivo [LICENSE.md](LICENSE.md) para detalles
+
+---
+
+**⌨️ por [kiger22](https://github.com/Kiger22)**
 
 ## Testing
 
@@ -330,13 +249,13 @@ PORT=3001
 MONGODB_URI=tu_uri_produccion
 ```
 
-2. Construir la aplicación:
+2.Construir la aplicación:
 
 ```bash
 npm run build
 ```
 
-3. Iniciar en producción:
+3.Iniciar en producción:
 
 ```bash
 npm start

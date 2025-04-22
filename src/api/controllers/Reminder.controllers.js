@@ -1,5 +1,6 @@
-const Reminder = require("../models/Reminder.model");
-const mongoose = require("mongoose");
+const mongoose = require('mongoose');
+const Reminder = require('../models/Reminder.model');
+const Place = require('../models/Places.model');
 
 //? Crear un nuevo recordatorio
 const createReminder = async (req, res, next) => {
@@ -133,13 +134,31 @@ const deleteReminder = async (req, res, next) => {
       return res.status(400).json({ mensaje: "ID de recordatorio inválido", éxito: false });
     }
 
-    // Eliminamos el recordatorio
-    const deletedReminder = await Reminder.findByIdAndDelete(reminderId);
+    // Obtenemos el recordatorio para acceder a su ubicación antes de eliminarlo
+    const reminder = await Reminder.findById(reminderId);
 
     // Si no se encuentra el recordatorio, devolvemos un error
-    if (!deletedReminder) {
+    if (!reminder) {
       return res.status(404).json({ mensaje: "Recordatorio no encontrado", éxito: false });
     }
+
+    // Si el recordatorio tiene una ubicación, decrementamos el contador del lugar
+    if (reminder.location) {
+      try {
+        // Buscamos el lugar por su ubicación
+        const place = await Place.findOne({ location: reminder.location });
+        if (place && place.useCount > 0) {
+          place.useCount -= 1;
+          await place.save();
+        }
+      } catch (placeError) {
+        console.error('Error al actualizar el contador del lugar:', placeError);
+        // Continuamos con la eliminación del recordatorio aunque falle la actualización del lugar
+      }
+    }
+
+    // Eliminamos el recordatorio
+    await Reminder.findByIdAndDelete(reminderId);
 
     // Devolvemos el mensaje de éxito al eliminar el recordatorio
     return res.status(200).json({
@@ -148,6 +167,7 @@ const deleteReminder = async (req, res, next) => {
     });
   }
   catch (error) {
+    console.error('Error al eliminar recordatorio:', error);
     return res.status(500).json({
       mensaje: "Error al eliminar recordatorio",
       error: error.message,
