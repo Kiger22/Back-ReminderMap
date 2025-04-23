@@ -7,7 +7,7 @@ const createFavorite = async (req, res) => {
   try {
     const { userId, placeId } = req.body;
 
-    // Creamos el favorito
+    // Creamos el favorito y lo guardamos
     const favorite = new Favorite({ userId, placeId });
     const savedFavorite = await favorite.save();
 
@@ -20,6 +20,7 @@ const createFavorite = async (req, res) => {
       { $addToSet: { myFavoritesLocations: savedFavorite._id } }
     );
 
+    // Devolvemos el favorito creado
     res.status(201).json(savedFavorite);
   } catch (error) {
     res.status(400).json({ message: 'Error al crear favorito', error });
@@ -30,6 +31,7 @@ const createFavorite = async (req, res) => {
 const getFavoritesByUser = async (req, res) => {
   try {
     const { userId } = req.params;
+    // Obtenemos los favoritos del usuario y los devolvemos
     const favorites = await Favorite.find({ userId: userId }).populate('placeId');
     res.status(200).json(favorites);
   }
@@ -43,7 +45,7 @@ const deleteFavorite = async (req, res) => {
   try {
     const { userId, placeId } = req.params;
 
-    console.log('Intentando eliminar favorito:', { userId, placeId }); // Para debugging
+    console.log('Intentando eliminar favorito:', { userId, placeId });
 
     // Verificamos que exista el favorito antes de eliminarlo
     const existingFavorite = await Favorite.findOne({
@@ -52,7 +54,7 @@ const deleteFavorite = async (req, res) => {
     });
 
     if (!existingFavorite) {
-      console.log('Favorito no encontrado para:', { userId, placeId }); // Para debugging
+      console.log('Favorito no encontrado para:', { userId, placeId });
       return res.status(404).json({ message: 'Favorito no encontrado' });
     }
 
@@ -71,9 +73,10 @@ const deleteFavorite = async (req, res) => {
       { $pull: { myFavoritesLocations: existingFavorite._id } }
     );
 
+    // Devolvemos la respuesta de éxito
     res.status(200).json({ message: 'Favorito eliminado exitosamente' });
   } catch (error) {
-    console.error('Error al eliminar favorito:', error); // Para debugging
+    console.error('Error al eliminar favorito:', error);
     res.status(500).json({
       message: 'Error al eliminar favorito',
       error: error.message

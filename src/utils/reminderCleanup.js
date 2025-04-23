@@ -1,16 +1,15 @@
 const Reminder = require('../api/models/Reminder.model');
 const Place = require('../api/models/Places.model');
 
-/**
- * Elimina los recordatorios cuya fecha y hora ya han pasado
- */
+//* Elimina los recordatorios cuya fecha y hora ya han pasado
+
 const cleanupPastReminders = async () => {
   try {
     console.log('Iniciando limpieza de recordatorios pasados...');
-    
+
     const currentDate = new Date();
-    
-    // Encontrar recordatorios pasados
+
+    // Buscamos recordatorios pasados
     const pastReminders = await Reminder.find({
       $or: [
         { date: { $lt: new Date(currentDate.toISOString().split('T')[0]) } },
@@ -20,14 +19,16 @@ const cleanupPastReminders = async () => {
         }
       ]
     });
-    
+
     console.log(`Se encontraron ${pastReminders.length} recordatorios pasados para eliminar`);
-    
-    // Actualizar contadores de lugares para cada recordatorio eliminado
+
+    // Actualizamos los contadores de lugares para cada recordatorio eliminado.
     for (const reminder of pastReminders) {
       if (reminder.location) {
         try {
+          // Buscamos el lugar por su ubicación
           const place = await Place.findOne({ location: reminder.location });
+          // Actualizamos el contador
           if (place && place.useCount > 0) {
             place.useCount -= 1;
             await place.save();
@@ -36,11 +37,11 @@ const cleanupPastReminders = async () => {
           console.error(`Error al actualizar contador del lugar para recordatorio ${reminder._id}:`, error);
         }
       }
-      
-      // Eliminar el recordatorio
+
+      // Eliminamos el recordatorio
       await Reminder.findByIdAndDelete(reminder._id);
     }
-    
+
     console.log('Limpieza de recordatorios pasados completada');
     return pastReminders.length;
   } catch (error) {

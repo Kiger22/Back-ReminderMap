@@ -6,8 +6,9 @@ const createLocationCategory = async (req, res) => {
   try {
     const { name, description, userId } = req.body;
 
-    console.log('Datos recibidos en el servidor:', req.body); // Debug
+    console.log('Datos recibidos en el servidor:', req.body);
 
+    // Validamos que se proporcionen el nombre y userId
     if (!name || !userId) {
       return res.status(400).json({
         message: 'El nombre y userId son requeridos',
@@ -23,13 +24,15 @@ const createLocationCategory = async (req, res) => {
       });
     }
 
+    // Creamos la categoría
     const locationCategory = new LocationCategory({
       name,
       description: description || '',
       userId,
-      places: [] // Inicializamos el array de lugares vacío
+      places: [] // Inicializamos el array de lugares
     });
 
+    // Guardamos la categoría y la devolvemos
     const savedCategory = await locationCategory.save();
 
     return res.status(201).json({
@@ -51,13 +54,15 @@ const createLocationCategory = async (req, res) => {
 //? Obtener todas las categorías
 const getLocationCategory = async (req, res) => {
   try {
-    const { userId } = req.query; // Opcional: filtrar por userId
+    const { userId } = req.query;
 
     console.log('Solicitud de categorías recibida. UserId:', userId);
 
+    // Construimos la consulta para buscar categorías
     const query = userId ? { userId } : {};
     console.log('Consulta para buscar categorías:', query);
 
+    // Buscamos las categorías y las devolvemos ordenadas por fecha de creación
     const locationCategories = await LocationCategory.find(query)
       .populate('places', 'name location')
       .sort({ createdAt: -1 });
@@ -82,9 +87,14 @@ const getLocationCategory = async (req, res) => {
 //? Obtener una categoría por ID
 const getLocationCategoryById = async (req, res) => {
   try {
-    const category = await LocationCategory.findById(req.params.id)
+    // Buscamos la categoría por ID y la devolvemos
+    const { id } = req.params;
+    console.log('Solicitud de categoría por ID recibida:', id);
+
+    const category = await LocationCategory.findById(id)
       .populate('places', 'name location description');
 
+    // Si no se encuentra la categoría, devolvemos un error
     if (!category) {
       return res.status(404).json({
         message: 'Categoría no encontrada',
@@ -92,6 +102,9 @@ const getLocationCategoryById = async (req, res) => {
       });
     }
 
+    console.log('Categoría encontrada:', category);
+
+    // Devolvemos la categoría
     res.status(200).json({
       category,
       success: true
@@ -114,6 +127,7 @@ const updateLocationCategory = async (req, res) => {
 
     const category = await LocationCategory.findById(id);
 
+    // Si no se encuentra la categoría, devolver un error
     if (!category) {
       return res.status(404).json({
         message: 'Categoría no encontrada',
@@ -163,6 +177,7 @@ const deleteLocationCategory = async (req, res) => {
     const { id } = req.params;
     const deletedCategory = await LocationCategory.findByIdAndDelete(id);
 
+    // Si no se encuentra la categoría, devolver un error
     if (!deletedCategory) {
       return res.status(404).json({
         message: 'Categoría no encontrada',
@@ -170,6 +185,7 @@ const deleteLocationCategory = async (req, res) => {
       });
     }
 
+    // Devolver un mensaje de éxito
     res.status(200).json({
       message: 'Categoría eliminada correctamente',
       success: true

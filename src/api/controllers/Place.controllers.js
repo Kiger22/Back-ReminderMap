@@ -63,24 +63,29 @@ const getPlaces = async (req, res, next) => {
 
     // Construimos filtros dinámicamente
     const filters = {};
+
+    // Si se proporciona una categoría, filtramos por ella
     if (category) filters.category = category;
+
+    // Si se proporciona un término de búsqueda, filtramos por nombre ignorando mayúsculas
     if (search) filters.name = { $regex: search, $options: 'i' };
 
     // Obtenemos lugares con filtros y paginación
     const places = await Place
       .find(filters)
       .populate({
-        path: 'category',
-        model: 'locationCategories',
-        select: 'name description'
+        path: 'category',                     // Indicamos que se debe popular.
+        model: 'locationCategories',          // Especificamos que el modelo relacionado.
+        select: 'name description'            // Seleccionamos solo los campos 'name' y 'description'.
       })
-      .skip((page - 1) * limit)
-      .limit(parseInt(limit))
-      .sort({ useCount: -1, createdAt: -1 });
+      .skip((page - 1) * limit)               // Saltamos los documentos según la página actual.
+      .limit(parseInt(limit))                 // Limitamos el número de documentos.
+      .sort({ useCount: -1, createdAt: -1 }); // Ordenamos los resultados.
 
     // Contamos total de lugares para paginación
     const totalPlaces = await Place.countDocuments(filters);
 
+    // Devolvemos los lugares encontrados
     return res.status(200).json({
       lugares: places,
       total: totalPlaces,
@@ -230,7 +235,7 @@ const getPlacesByUser = async (req, res) => {
       });
     }
 
-    // Buscamos lugares del usuario
+    // Buscamos lugares del usuario y los devolvemos ordenados por fecha de creación
     const places = await Place.find({ userId })
       .populate({
         path: 'category',
@@ -258,6 +263,7 @@ const incrementUseCount = async (req, res) => {
   try {
     const { id } = req.params;
 
+    // Buscamos el lugar por su ID
     const place = await Place.findById(id);
     if (!place) {
       return res.status(404).json({

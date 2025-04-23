@@ -65,7 +65,7 @@ const getUserReminders = async (req, res, next) => {
       return res.status(400).json({ mensaje: "ID de usuario inválido", éxito: false });
     }
 
-    // Obtenemos y devolvemos los recordatorios del usuario
+    // Obtenemos y devolvemos los recordatorios del usuario ordenados por fecha y hora
     const reminders = await Reminder.find({ userId }).sort({ date: 1, time: 1 });
 
     return res.status(200).json({

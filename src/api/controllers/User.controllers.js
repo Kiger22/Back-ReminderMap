@@ -93,6 +93,7 @@ const loginUser = async (req, res, next) => {
       hashedPassword: user?.password?.substring(0, 20) + '...' // Solo mostramos parte del hash
     });
 
+    // Si no se encuentra el usuario, devolvemos un error
     if (!user) {
       return res.status(401).json({
         mensaje: "Usuario no encontrado",
@@ -100,6 +101,7 @@ const loginUser = async (req, res, next) => {
       });
     }
 
+    // Comparamos la contraseña ingresada con la contraseña hasheada en la base de datos
     try {
       console.log('Datos para comparación:', {
         passwordInput: password.trim(),
@@ -109,6 +111,7 @@ const loginUser = async (req, res, next) => {
       const passwordMatch = await bcrypt.compare(password.trim(), user.password);
       console.log('Resultado de comparación:', passwordMatch);
 
+      // Si la contraseña no coincide, devolvemos un error
       if (!passwordMatch) {
         return res.status(401).json({
           mensaje: "Contraseña incorrecta",
@@ -116,7 +119,7 @@ const loginUser = async (req, res, next) => {
         });
       }
 
-      // Si llegamos aquí, la contraseña es correcta
+      // Si la contraseña coincide, generamos un token y devolvemos la respuesta
       const token = generateSign(user._id);
       const userWithoutPassword = user.toObject();
       delete userWithoutPassword.password;

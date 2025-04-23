@@ -65,14 +65,14 @@ const startServer = async () => {
   }
 };
 
-// Manejadores de eventos para cierre graceful
+// Manejadores de eventos para cierre ordenado
 process.on('SIGTERM', async () => {
-  console.log('Señal SIGTERM recibida. Iniciando cierre graceful...');
+  console.log('Señal SIGTERM recibida. Iniciando cierre ordenado...');
   await cleanupServer();
   process.exit(0);
 });
 process.on('SIGINT', async () => {
-  console.log('Señal SIGINT recibida. Iniciando cierre graceful...');
+  console.log('Señal SIGINT recibida. Iniciando cierre ordenado...');
   await cleanupServer();
   process.exit(0);
 });
@@ -87,6 +87,7 @@ process.on('unhandledRejection', async (reason, promise) => {
   process.exit(1);
 });
 
+// Configuración de CORS
 const corsOptions = {
   origin: process.env.NODE_ENV === 'production'
     ? process.env.ALLOWED_ORIGINS?.split(',') || 'http://localhost:5173'
@@ -96,22 +97,25 @@ const corsOptions = {
   credentials: true,  // Permite enviar cookies a través de solicitudes CORS
   maxAge: 86400       // Cachea los resultados del preflight por 1 día
 };
-
 app.use(cors(corsOptions));
 
+// Configuración de Express
 app.use(express.json());
 app.use(express.urlencoded({
   extended: true
 }));
 
+// Middleware para registrar solicitudes
 app.use((req, res, next) => {
   console.log(`[${new Date().toISOString()}] ${req.method} ${req.originalUrl}`);
   console.log('Origen:', req.headers.origin);
   next();
 });
 
+// Rutas
 app.use('/api/v1', mainRoutes);
 
+// Ruta de salud
 app.get('/api/health', (req, res) => {
   res.json({
     status: 'ok',
@@ -120,6 +124,7 @@ app.get('/api/health', (req, res) => {
   });
 });
 
+// Middleware para manejar errores 404
 app.use('*', (req, res, next) => {
   const error = new Error('Ruta no encontrada');
   error.status = 404;
@@ -137,9 +142,11 @@ app.use((err, req, res, next) => {
   });
 });
 
+// Iniciar el servidor
 startServer();
 
-// Programar la limpieza de recordatorios pasados
+//* Programar la limpieza de recordatorios pasados
+
 // Ejecutar inmediatamente al iniciar el servidor
 setTimeout(async () => {
   try {
